@@ -2,20 +2,20 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
-(defn- load-file-content [file line ctx-lines]
+(defn- load-file-content [file line nlines]
   (when-let [res (io/resource file)]
     (with-open [r (io/reader res)]
       (let [line' (dec line)]
         (->> (line-seq r)
              (map-indexed vector)
              (reduce (fn [ret [i text]]
-                       (cond (<= (- line' ctx-lines) i (dec line'))
+                       (cond (<= (- line' nlines) i (dec line'))
                              (update-in ret [:content :before] (fnil conj []) text)
 
                              (= i line')
                              (assoc-in ret [:content :focus-line] text)
 
-                             (<= (inc line') i (+ line' ctx-lines))
+                             (<= (inc line') i (+ line' nlines))
                              (update-in ret [:content :after] (fnil conj []) text)
 
                              :else ret))
@@ -52,7 +52,7 @@
                             munge
                             (str/replace #"\." "/")
                             (str ".clj"))
-                   content (load-file-content path line 10)]
+                   content (load-file-content path line (:lines opts))]
              :when content]
          (assoc content
                 :class class
