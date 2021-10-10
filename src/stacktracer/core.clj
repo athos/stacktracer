@@ -22,14 +22,21 @@
                      {}))))))
 
 (defn- print-file-content [{:keys [file line content]}]
-  (printf "   \u001b[36m---- %s:%d ----\u001b[0m\n" file line)
-  (let [{:keys [before focus-line after]} content]
+  (let [{:keys [before focus-line after]} content
+        ndigits (count (str (+ line (count after))))
+        pad (fn [x]
+              (let [text (str x), len (count text)]
+                (with-out-str
+                  (dotimes [_ (- ndigits len)]
+                    (print \space))
+                  (print text))))]
+    (printf "   \u001b[36m---- %s:%d ----\u001b[0m\n" file line)
     (doseq [[i text] (map-indexed vector before)
             :let [i' (- line (count before) (- i))]]
-      (printf "   %d| %s\n" i' text))
-    (printf "\u001b[31m=> %d| %s\u001b[0m\n" line focus-line)
+      (printf "   %s| %s\n" (pad i') text))
+    (printf "\u001b[31m=> %s| %s\u001b[0m\n" (pad line) focus-line)
     (doseq [[i text] (map-indexed vector after)]
-      (printf "   %d| %s\n" (+ line i 1) text))))
+      (printf "   %s| %s\n" (pad (+ line i 1)) text))))
 
 (defn- ns+fn-name-matches? [pattern class-sym]
   (-> (name class-sym)
