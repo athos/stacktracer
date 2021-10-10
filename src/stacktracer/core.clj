@@ -31,7 +31,20 @@
     (doseq [[i text] (map-indexed vector after)]
       (printf "   %d| %s\n" (+ line i 1) text))))
 
-(defn- collect-stacktrace-relevant-contents [xform stacktrace]
+(defn- ns+fn-name-matches? [pattern class-sym]
+  (-> (name class-sym)
+      (str/replace #"([^$]+\$[^$]+)(?:\$.*)?" "$1")
+      (str/replace \$ \/)
+      (#(re-matches pattern %))))
+
+(defn- build-xform [{:keys [xform from limit include exclude]}]
+  (cond-> (or xform identity)
+    from (comp (drop from))
+    limit (comp (take limit))
+    include (comp (filter #(ns+fn-name-matches? include (:class %))))
+    exclude (comp (remove #(ns+fn-name-matches? exclude (:class %))))))
+
+(defn- collect-stacktrace-relevant-contents [opts stacktrace]
   (->> (for [[class method file line] (map StackTraceElement->vec stacktrace)
              :when (not= file "NO_SOURCE_FILE")
              :let [path (-> (name class)
@@ -46,40 +59,33 @@
                 :method method
                 :file path
                 :line line))
-       (sequence xform)))
+       (sequence (build-xform opts))
+       (#(cond-> % (:reversed? opts) reverse))))
 
-(def default-xform
-  (comp (remove #(re-find #"^clojure\.(:?core|main)\$" (name (:class %))))
-        (remove #(= (:method %) 'invoke))))
+(defn pst [e opts]
+  (->> (.getStackTrace e)
+       (collect-stacktrace-relevant-contents opts)
+       (run! (fn [content]
+               (print-file-content content)
+               (newline)))))
 
-(defn esp
-  ([] (esp *e))
-  ([e]
-   (->> (.getStackTrace e)
-        (collect-stacktrace-relevant-contents default-xform)
-        (run! (fn [content]
-                (print-file-content content)
-                (newline))))))
-
-(defn nav
-  ([] (nav *e))
-  ([e]
-   (let [contents (->> (.getStackTrace e)
-                       (collect-stacktrace-relevant-contents default-xform)
-                       vec)
-         index (atom -1)]
-     (fn self
-       ([] (self :next))
-       ([arg]
-        (case arg
-          :reset (reset! index -1)
-          (let [i (case arg
-                    :prev (max (dec @index) 0)
-                    :next (inc @index)
-                    (if (neg? arg)
-                      (+ (count contents) arg)
-                      arg))]
-            (when (< i (count contents))
-              (print-file-content (get contents i))
-              (reset! index i))))
-        nil)))))
+(defn nav [e opts]
+  (let [contents (->> (.getStackTrace e)
+                      (collect-stacktrace-relevant-contents opts)
+                      vec)
+        index (atom -1)]
+    (fn self
+      ([] (self :next))
+      ([arg]
+       (case arg
+         :reset (reset! index -1)
+         (let [i (case arg
+                   :prev (max (dec @index) 0)
+                   :next (inc @index)
+                   (if (neg? arg)
+                     (+ (count contents) arg)
+                     arg))]
+           (when (< i (count contents))
+             (print-file-content (get contents i))
+             (reset! index i))))
+       nil))))
