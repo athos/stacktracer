@@ -6,7 +6,7 @@
         (remove #(= (:method %) 'invoke))))
 
 (def ^:private default-options
-  (atom {:xform default-xform :lines 10}))
+  (atom {:xform default-xform :lines 7 :color true}))
 
 (defn set-default-options! [opts]
   (reset! default-options opts))

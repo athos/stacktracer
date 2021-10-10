@@ -21,7 +21,7 @@
                              :else ret))
                      {}))))))
 
-(defn- print-file-content [{:keys [file line content]}]
+(defn- print-file-content [{:keys [file line content]} opts]
   (let [{:keys [before focus-line after]} content
         ndigits (count (str (+ line (count after))))
         times (fn [n c]
@@ -32,20 +32,27 @@
               (let [text (str x), len (count text)]
                 (with-out-str
                   (print (times (- ndigits len) \space))
-                  (print text))))]
-    (printf "   \u001b[36m---- %s:%d ----\u001b[0m\n" file line)
+                  (print text))))
+        cprintf (if (:color opts)
+                  (fn [attr fmt & args]
+                    (case attr
+                      :info (print "\u001b[36m")
+                      :error (print "\u001b[31m"))
+                    (apply printf fmt args)
+                    (print "\u001b[0m"))
+                  (fn [_ fmt & args]
+                    (apply printf fmt args)))]
+    (cprintf :info "   ---- %s:%d ----\n" file line)
     (doseq [[i text] (map-indexed vector before)
             :let [i' (- line (count before) (- i))]]
       (printf "   %s| %s\n" (pad i') text))
-    (printf "\u001b[31m=> %s| %s\u001b[0m\n" (pad line) focus-line)
+    (cprintf :error "=> %s| %s\n" (pad line) focus-line)
     (let [i (->> focus-line
                  (map-indexed vector)
                  (drop-while (fn [[_ c]] (Character/isWhitespace c)))
                  (ffirst))]
-      (printf "   \u001b[31m%s|%s%s\u001b[0m\n"
-              (pad "")
-              (times (inc i) \space)
-              (times (- (count focus-line) i) \^)))
+      (cprintf :error "   %s|%s%s\n" (pad "") (times (inc i) \space)
+               (times (- (count focus-line) i) \^)))
     (doseq [[i text] (map-indexed vector after)]
       (printf "   %s| %s\n" (pad (+ line i 1)) text))))
 
@@ -84,7 +91,7 @@
   (->> (.getStackTrace e)
        (collect-stacktrace-relevant-contents opts)
        (run! (fn [content]
-               (print-file-content content)
+               (print-file-content content opts)
                (newline)))))
 
 (defn nav [e opts]
@@ -104,6 +111,6 @@
                      (+ (count contents) arg)
                      arg))]
            (when (< i (count contents))
-             (print-file-content (get contents i))
+             (print-file-content (get contents i) opts)
              (reset! index i))))
        nil))))
