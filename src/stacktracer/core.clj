@@ -24,17 +24,28 @@
 (defn- print-file-content [{:keys [file line content]}]
   (let [{:keys [before focus-line after]} content
         ndigits (count (str (+ line (count after))))
+        times (fn [n c]
+                (with-out-str
+                  (dotimes [_ n]
+                    (print c))))
         pad (fn [x]
               (let [text (str x), len (count text)]
                 (with-out-str
-                  (dotimes [_ (- ndigits len)]
-                    (print \space))
+                  (print (times (- ndigits len) \space))
                   (print text))))]
     (printf "   \u001b[36m---- %s:%d ----\u001b[0m\n" file line)
     (doseq [[i text] (map-indexed vector before)
             :let [i' (- line (count before) (- i))]]
       (printf "   %s| %s\n" (pad i') text))
     (printf "\u001b[31m=> %s| %s\u001b[0m\n" (pad line) focus-line)
+    (let [i (->> focus-line
+                 (map-indexed vector)
+                 (drop-while (fn [[_ c]] (Character/isWhitespace c)))
+                 (ffirst))]
+      (printf "   \u001b[31m%s|%s%s\u001b[0m\n"
+              (pad "")
+              (times (inc i) \space)
+              (times (- (count focus-line) i) \^)))
     (doseq [[i text] (map-indexed vector after)]
       (printf "   %s| %s\n" (pad (+ line i 1)) text))))
 
