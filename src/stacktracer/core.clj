@@ -1,4 +1,4 @@
-(ns esper.core
+(ns stacktracer.core
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -52,30 +52,34 @@
   (comp (remove #(re-find #"^clojure\.(:?core|main)\$" (name (:class %))))
         (remove #(= (:method %) 'invoke))))
 
-(defn esp []
-  (->> (.getStackTrace *e)
-       (collect-stacktrace-relevant-contents default-xform)
-       (run! (fn [content]
-               (print-file-content content)
-               (newline)))))
+(defn esp
+  ([] (esp *e))
+  ([e]
+   (->> (.getStackTrace e)
+        (collect-stacktrace-relevant-contents default-xform)
+        (run! (fn [content]
+                (print-file-content content)
+                (newline))))))
 
-(defn nav []
-  (let [contents (->> (.getStackTrace *e)
-                      (collect-stacktrace-relevant-contents default-xform)
-                      vec)
-        index (atom -1)]
-    (fn self
-      ([] (self :next))
-      ([arg]
-       (case arg
-         :reset (reset! index -1)
-         (let [i (case arg
-                   :prev (max (dec @index) 0)
-                   :next (inc @index)
-                   (if (neg? arg)
-                     (+ (count contents) arg)
-                     arg))]
-           (when (< i (count contents))
-             (print-file-content (get contents i))
-             (reset! index i))))
-       nil))))
+(defn nav
+  ([] (nav *e))
+  ([e]
+   (let [contents (->> (.getStackTrace e)
+                       (collect-stacktrace-relevant-contents default-xform)
+                       vec)
+         index (atom -1)]
+     (fn self
+       ([] (self :next))
+       ([arg]
+        (case arg
+          :reset (reset! index -1)
+          (let [i (case arg
+                    :prev (max (dec @index) 0)
+                    :next (inc @index)
+                    (if (neg? arg)
+                      (+ (count contents) arg)
+                      arg))]
+            (when (< i (count contents))
+              (print-file-content (get contents i))
+              (reset! index i))))
+        nil)))))

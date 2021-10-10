@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.clojars.athos</groupId>
-  <artifactId>esper</artifactId>
+  <artifactId>stacktracer</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <name>org.clojars.athos/esper</name>
-  <description>An error-site printer for Clojure</description>
-  <url>https://github.com/athos/esper</url>
+  <name>org.clojars.athos/stacktracer</name>
+  <description>A small development utility to print stack trace with code context</description>
+  <url>https://github.com/athos/stacktracer</url>
   <licenses>
     <license>
       <name>Eclipse Public License</name>
@@ -19,9 +19,9 @@
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/athos/esper</url>
-    <connection>scm:git:git://github.com/athos/esper.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/athos/esper.git</developerConnection>
+    <url>https://github.com/athos/stacktracer</url>
+    <connection>scm:git:git://github.com/athos/stacktracer.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/athos/stacktracer.git</developerConnection>
     <tag>v0.1.0-SNAPSHOT</tag>
   </scm>
   <dependencies>

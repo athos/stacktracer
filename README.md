@@ -1,6 +1,6 @@
-# ESPer
+# stacktracer
 
-ESPer: a person who has the ability of ESP (Extrasensory Perception), or an error-site printer
+A small development utility to print stack trace with code context
 
 ## Usage
 

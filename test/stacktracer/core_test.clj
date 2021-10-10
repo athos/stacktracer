@@ -1,6 +1,6 @@
-(ns esper.core-test
+(ns stacktracer.core-test
   (:require [clojure.test :refer :all]
-            [esper.core :refer :all]))
+            [stacktracer.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
