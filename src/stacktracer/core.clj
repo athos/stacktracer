@@ -3,7 +3,8 @@
             [clojure.string :as str]))
 
 (defn- load-file-content [file line nlines]
-  (when-let [res (io/resource file)]
+  (when-let [res (-> (clojure.lang.RT/baseLoader)
+                     (.getResource file))]
     (with-open [r (io/reader res)]
       (let [line' (dec line)]
         (->> (line-seq r)
