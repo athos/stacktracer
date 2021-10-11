@@ -64,10 +64,10 @@
 
 (defn- build-xform [{:keys [xform from limit include exclude]}]
   (cond-> (or xform identity)
-    from (comp (drop from))
-    limit (comp (take limit))
     include (comp (filter #(ns+fn-name-matches? include (:class %))))
-    exclude (comp (remove #(ns+fn-name-matches? exclude (:class %))))))
+    exclude (comp (remove #(ns+fn-name-matches? exclude (:class %))))
+    from (comp (drop from))
+    limit (comp (take limit))))
 
 (defn- collect-stacktrace-relevant-contents [opts stacktrace]
   (->> (for [[class method file line] (map StackTraceElement->vec stacktrace)
