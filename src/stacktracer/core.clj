@@ -69,8 +69,11 @@
   (->> (for [[class method file line] (map StackTraceElement->vec stacktrace)
              :when (not= file "NO_SOURCE_FILE")
              :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
-                                                (name class))]
-             :when (and nsname fname)
+                                                (name class))
+                   [_ simple-name] (some->> nsname (re-matches #".*\.([^.]+)$"))]
+             :when (and simple-name
+                        (re-find #"\.cljc?$" file)
+                        (= simple-name (str/replace file #"\.cljc?$" "")))
              :let [path (-> (munge nsname)
                             (str/replace #"\." "/")
                             (str ".clj"))
