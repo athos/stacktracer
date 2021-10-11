@@ -16,7 +16,7 @@
              (rf result input))))))))
 
 (def default-xform
-  (comp (remove #(re-matches #"^clojure\.(?:core|main)/.*" (:fn %)))
+  (comp (remove #(re-matches #"(?:clojure|nrepl)\..*" (:fn %)))
         (dedupe-by (juxt :fn :method :file :line))
         (dedupe-by (juxt :class
                          (fn [{m :method}]
