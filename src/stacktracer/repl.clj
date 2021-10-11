@@ -20,7 +20,9 @@
         (dedupe-by (juxt :fn :method :file :line))
         (dedupe-by (juxt :class
                          (fn [{m :method}]
-                           (get '{invoke invokeStatic} m m))))))
+                           (get '{invoke invokeStatic
+                                  doInvoke invokeStatic}
+                                m m))))))
 
 (def ^:private default-options
   (atom {:xform default-xform :lines 7 :color true}))
