@@ -16,8 +16,8 @@
              (rf result input))))))))
 
 (def default-xform
-  (comp (remove #(re-find #"^clojure\.(:?core|main)\$" (name (:class %))))
-        (dedupe-by (juxt :class :method :file :line))
+  (comp (remove #(re-matches #"^clojure\.(?:core|main)/.*" (:fn %)))
+        (dedupe-by (juxt :fn :method :file :line))
         (dedupe-by (juxt :class
                          (fn [{m :method}]
                            (get '{invoke invokeStatic} m m))))))

@@ -1,5 +1,6 @@
 (ns stacktracer.core
   (:require [clojure.java.io :as io]
+            [clojure.repl :as repl]
             [clojure.string :as str]))
 
 (defn- load-file-content [file line nlines]
@@ -57,34 +58,27 @@
     (doseq [[i text] (map-indexed vector after)]
       (printf "   %s| %s\n" (pad (+ line i 1)) text))))
 
-(defn- ns+fn-name-matches? [pattern class-sym]
-  (-> (name class-sym)
-      (str/replace #"([^$]+\$[^$]+)(?:\$.*)?" "$1")
-      (str/replace \$ \/)
-      (#(re-matches pattern %))))
-
 (defn- build-xform [{:keys [xform from limit include exclude]}]
   (cond-> (or xform identity)
-    include (comp (filter #(ns+fn-name-matches? include (:class %))))
-    exclude (comp (remove #(ns+fn-name-matches? exclude (:class %))))
+    include (comp (filter #(re-matches include (:fn %))))
+    exclude (comp (remove #(re-matches exclude (:fn %))))
     from (comp (drop from))
     limit (comp (take limit))))
 
 (defn- collect-stacktrace-relevant-contents [opts stacktrace]
   (->> (for [[class method file line] (map StackTraceElement->vec stacktrace)
              :when (not= file "NO_SOURCE_FILE")
-             :let [path (-> (name class)
-                            (str/replace #"\$.*$" "")
-                            munge
+             :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
+                                                (name class))]
+             :when (and nsname fname)
+             :let [path (-> (munge nsname)
                             (str/replace #"\." "/")
                             (str ".clj"))
                    content (load-file-content path line (:lines opts))]
              :when content]
-         (assoc content
-                :class class
-                :method method
-                :file path
-                :line line))
+         (assoc content :class class :method method
+                :fn (repl/demunge (str nsname \$ fname))
+                :file path :line line))
        (sequence (build-xform opts))
        (#(cond-> % (:reversed? opts) reverse))))
 
