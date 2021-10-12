@@ -23,7 +23,21 @@
                              :else ret))
                      {}))))))
 
-(defn- print-file-content [{:keys [file line content]} opts]
+(defn- compact-fn-name [qualified-fname]
+  (let [[_ nsname fname] (re-matches #"([^/]+)/(.*)" qualified-fname)
+        names (str/split nsname #"\.")]
+    (if (or (> (count names) 2)
+            (> (count (first names)) 20))
+      (with-out-str
+        (doseq [name (butlast names)]
+          (print (first name))
+          (print \.))
+        (print (last names))
+        (print \/)
+        (print fname))
+      qualified-fname)))
+
+(defn- print-file-content [{fname :fn :keys [file line content]} opts]
   (let [{:keys [before focus-line after]} content
         ndigits (count (str (+ line (count after))))
         times (fn [n c]
@@ -44,7 +58,8 @@
                     (print "\u001b[0m"))
                   (fn [_ fmt & args]
                     (apply printf fmt args)))]
-    (cprintf :info "   ---- %s:%d ----\n" file line)
+    (cprintf :info "   ---- %s (%s:%d) ----\n"
+             (compact-fn-name fname) file line)
     (doseq [[i text] (map-indexed vector before)
             :let [i' (- line (count before) (- i))]]
       (printf "   %s| %s\n" (pad i') text))
