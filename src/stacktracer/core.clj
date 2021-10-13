@@ -101,16 +101,19 @@
        (#(cond-> % (:reversed? opts) reverse))))
 
 (defn pst [e opts]
-  (->> (.getStackTrace e)
-       (collect-stacktrace-relevant-contents opts)
-       (run! (fn [content]
-               (print-file-content content opts)
-               (newline)))))
+  (when e
+    (->> (.getStackTrace e)
+         (collect-stacktrace-relevant-contents opts)
+         (run! (fn [content]
+                 (print-file-content content opts)
+                 (newline))))))
 
 (defn nav [e opts]
-  (let [contents (->> (.getStackTrace e)
-                      (collect-stacktrace-relevant-contents opts)
-                      vec)
+  (let [contents (or (some->> e
+                              (.getStackTrace)
+                              (collect-stacktrace-relevant-contents opts)
+                              vec)
+                     [])
         index (atom -1)]
     (fn self
       ([] (self :next))
