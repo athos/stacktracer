@@ -33,14 +33,14 @@
 (defn update-default-options! [f & args]
   (apply swap! default-options f args))
 
+(defn pst-for [e & {:as opts}]
+  (st/pst e (merge @default-options opts)))
+
 (defn pst [& args]
-  (let [[e [& {:as opts}]] (if (instance? Throwable (first args))
-                             [(first args) (rest args)]
-                             [*e args])]
-    (st/pst e (merge @default-options opts))))
+  (apply pst-for *e args))
+
+(defn nav-for [e & {:as opts}]
+  (st/nav e (merge @default-options opts)))
 
 (defn nav [& args]
-  (let [[e [& {:as opts}]] (if (instance? Throwable (first args))
-                             [(first args) (rest args)]
-                             [*e args])]
-    (st/nav e (merge @default-options opts))))
+  (apply nav-for *e args))
