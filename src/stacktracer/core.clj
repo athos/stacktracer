@@ -3,25 +3,23 @@
             [clojure.repl :as repl]
             [clojure.string :as str]))
 
-(defn- load-file-content [file line nlines]
-  (when-let [res (-> (clojure.lang.RT/baseLoader)
-                     (.getResource file))]
-    (with-open [r (io/reader res)]
-      (let [line' (dec line)]
-        (->> (line-seq r)
-             (map-indexed vector)
-             (reduce (fn [ret [i text]]
-                       (cond (<= (- line' nlines) i (dec line'))
-                             (update-in ret [:content :before] (fnil conj []) text)
+(defn- load-entry-content [{:keys [resource line]} {nlines :lines}]
+  (with-open [r (io/reader resource)]
+    (let [line' (dec line)]
+      (->> (line-seq r)
+           (map-indexed vector)
+           (reduce (fn [ret [i text]]
+                     (cond (<= (- line' nlines) i (dec line'))
+                           (update ret :before (fnil conj []) text)
 
-                             (= i line')
-                             (assoc-in ret [:content :focus-line] text)
+                           (= i line')
+                           (assoc ret :focus-line text)
 
-                             (<= (inc line') i (+ line' nlines))
-                             (update-in ret [:content :after] (fnil conj []) text)
+                           (<= (inc line') i (+ line' nlines))
+                           (update ret :after (fnil conj []) text)
 
-                             :else ret))
-                     {}))))))
+                           :else ret))
+                   {})))))
 
 (defn- compact-fn-name [qualified-fname]
   (let [[_ nsname fname] (re-matches #"([^/]+)/(.*)" qualified-fname)
@@ -37,7 +35,7 @@
         (print fname))
       qualified-fname)))
 
-(defn- print-file-content [{fname :fn :keys [file line content]} opts]
+(defn- print-entry-content [{fname :fn :keys [file line]} content opts]
   (let [{:keys [before focus-line after]} content
         ndigits (count (str (+ line (count after))))
         times (fn [n c]
@@ -80,7 +78,7 @@
     from (comp (drop from))
     limit (comp (take limit))))
 
-(defn- collect-stacktrace-relevant-contents [opts stacktrace]
+(defn- collect-available-entries [opts stacktrace]
   (->> (for [[class method file line] (map StackTraceElement->vec stacktrace)
              :when (not= file "NO_SOURCE_FILE")
              :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
@@ -92,28 +90,30 @@
              :let [path (-> (munge nsname)
                             (str/replace #"\." "/")
                             (str ext))
-                   content (load-file-content path line (:lines opts))]
-             :when content]
-         (assoc content :class class :method method
-                :fn (repl/demunge (str nsname \$ fname))
-                :file path :line line))
+                   res (-> (clojure.lang.RT/baseLoader)
+                           (.getResource path))]
+             :when res]
+         {:class class :method method
+          :fn (repl/demunge (str nsname \$ fname))
+          :resource res :file path :line line})
        (sequence (build-xform opts))
        (#(cond-> % (:reversed? opts) reverse))))
 
 (defn pst [e opts]
   (when e
     (->> (.getStackTrace e)
-         (collect-stacktrace-relevant-contents opts)
-         (run! (fn [content]
-                 (print-file-content content opts)
-                 (newline))))))
+         (collect-available-entries opts)
+         (run! (fn [file]
+                 (let [content (load-entry-content file opts)]
+                   (print-entry-content file content opts)
+                   (newline)))))))
 
 (defn nav [e opts]
-  (let [contents (or (some->> e
-                              (.getStackTrace)
-                              (collect-stacktrace-relevant-contents opts)
-                              vec)
-                     [])
+  (let [entries (or (some->> e
+                             (.getStackTrace)
+                             (collect-available-entries opts)
+                             vec)
+                    [])
         index (atom -1)]
     (fn self
       ([] (self :next))
@@ -124,9 +124,11 @@
                    :prev (max (dec @index) 0)
                    :next (inc @index)
                    (if (neg? arg)
-                     (+ (count contents) arg)
+                     (+ (count entries) arg)
                      arg))]
-           (when (< i (count contents))
-             (print-file-content (get contents i) opts)
-             (reset! index i))))
+           (when (< i (count entries))
+             (let [entry (get entries i)
+                   content (load-entry-content entry opts)]
+               (print-entry-content entry content opts)
+               (reset! index i)))))
        nil))))
