@@ -1,7 +1,8 @@
 (ns stacktracer.core
   (:require [clojure.java.io :as io]
             [clojure.repl :as repl]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [stacktracer.xforms :as sx]))
 
 (defn- load-entry-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
@@ -71,11 +72,14 @@
     (doseq [[i text] (map-indexed vector after)]
       (printf "   %s| %s\n" (pad (+ line i 1)) text))))
 
-(defn- build-xform [{:keys [xform from limit include exclude]}]
+(defn- build-xform [{:keys [xform start end limit include exclude]}]
   (cond-> (or xform identity)
     include (comp (filter #(re-matches include (:fn %))))
     exclude (comp (remove #(re-matches exclude (:fn %))))
-    from (comp (drop from))
+    end (as-> x (if (nat-int? end)
+                  (comp x (take end))
+                  (comp x (sx/drop-last (- end)))))
+    start (comp (drop start))
     limit (comp (take limit))))
 
 (defn- collect-available-entries [opts stacktrace]
