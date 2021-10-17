@@ -12,7 +12,7 @@
                                    m m))))))
 
 (def ^:private default-options
-  (atom {:xform default-xform :lines 7 :color true}))
+  (atom {:xform default-xform :lines 7 :color true :show-message true}))
 
 (defn set-default-options! [opts]
   (reset! default-options opts))

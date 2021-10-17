@@ -105,6 +105,9 @@
 
 (defn pst [e opts]
   (when e
+    (when (:show-message opts)
+      (printf "%s %s\n" (.getSimpleName (class e)) (.getMessage e))
+      (newline))
     (->> (.getStackTrace e)
          (collect-available-entries opts)
          (run! (fn [file]
