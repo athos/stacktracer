@@ -101,7 +101,7 @@
           :fn (repl/demunge (str nsname \$ fname))
           :resource res :file path :line line})
        (sequence (build-xform opts))
-       (#(cond-> % (:reversed? opts) reverse))))
+       (#(cond-> % (:reverse opts) reverse))))
 
 (defn pst [e opts]
   (when e
