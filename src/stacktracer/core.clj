@@ -14,7 +14,7 @@
                            (update ret :before (fnil conj []) text)
 
                            (= i line')
-                           (assoc ret :focus-line text)
+                           (assoc ret :focused text)
 
                            (<= (inc line') i (+ line' nlines))
                            (update ret :after (fnil conj []) text)
@@ -37,7 +37,7 @@
       qualified-fname)))
 
 (defn- print-entry-content [{fname :fn :keys [file line]} content opts]
-  (let [{:keys [before focus-line after]} content
+  (let [{:keys [before focused after]} content
         ndigits (count (str (+ line (count after))))
         times (fn [n c]
                 (with-out-str
@@ -62,13 +62,13 @@
     (doseq [[i text] (map-indexed vector before)
             :let [i' (- line (count before) (- i))]]
       (printf "   %s| %s\n" (pad i') text))
-    (cprintf :error "=> %s| %s\n" (pad line) focus-line)
-    (let [i (->> focus-line
+    (cprintf :error "=> %s| %s\n" (pad line) focused)
+    (let [i (->> focused
                  (map-indexed vector)
                  (drop-while (fn [[_ c]] (Character/isWhitespace c)))
                  (ffirst))]
       (cprintf :error "   %s|%s%s\n" (pad "") (times (inc i) \space)
-               (times (- (count focus-line) i) \^)))
+               (times (- (count focused) i) \^)))
     (doseq [[i text] (map-indexed vector after)]
       (printf "   %s| %s\n" (pad (+ line i 1)) text))))
 
