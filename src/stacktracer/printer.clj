@@ -1,4 +1,4 @@
-(ns stacktracer.print
+(ns stacktracer.printer
   (:refer-clojure :exclude [print printf newline])
   (:require [clojure.core :as cc]
             [clojure.string :as str]
