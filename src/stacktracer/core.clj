@@ -57,7 +57,7 @@
 
 (defn pst [e opts]
   (when e
-    (let [renderer (render/make-print-renderer opts)]
+    (let [renderer (render/make-renderer opts)]
       (proto/render-start renderer e)
       (->> (.getStackTrace e)
            (collect-available-entries opts)
@@ -73,7 +73,7 @@
                              vec)
                     [])
         index (atom -1)
-        renderer (render/make-print-renderer opts)]
+        renderer (render/make-renderer opts)]
     (fn self
       ([] (self :next))
       ([arg]
