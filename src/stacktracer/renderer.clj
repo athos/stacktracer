@@ -1,4 +1,4 @@
-(ns stacktracer.render
+(ns stacktracer.renderer
   (:require [stacktracer.print :as print]))
 
 (defmulti make-renderer (fn [opts] (:render opts)))

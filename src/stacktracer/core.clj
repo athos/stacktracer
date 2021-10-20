@@ -3,7 +3,7 @@
             [clojure.repl :as repl]
             [clojure.string :as str]
             [stacktracer.protocols :as proto]
-            [stacktracer.render :as render]
+            [stacktracer.renderer :as renderer]
             [stacktracer.xforms :as sx]))
 
 (defn- load-entry-content [{:keys [resource line]} {nlines :lines}]
@@ -57,7 +57,7 @@
 
 (defn pst [e opts]
   (when e
-    (let [renderer (render/make-renderer opts)]
+    (let [renderer (renderer/make-renderer opts)]
       (proto/render-start renderer e)
       (->> (.getStackTrace e)
            (collect-available-entries opts)
@@ -73,7 +73,7 @@
                              vec)
                     [])
         index (atom -1)
-        renderer (render/make-renderer opts)]
+        renderer (renderer/make-renderer opts)]
     (fn self
       ([] (self :next))
       ([arg]
