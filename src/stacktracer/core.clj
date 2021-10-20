@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.repl :as repl]
             [clojure.string :as str]
+            [stacktracer.protocols :as proto]
             [stacktracer.render :as render]
             [stacktracer.xforms :as sx]))
 
@@ -56,14 +57,14 @@
 
 (defn pst [e opts]
   (when e
-    (when (:show-message opts)
-      (render/render-message e opts))
-    (->> (.getStackTrace e)
-         (collect-available-entries opts)
-         (run! (fn [file]
-                 (let [content (load-entry-content file opts)]
-                   (render/render-content file content opts)
-                   (newline)))))))
+    (let [renderer (render/make-print-renderer opts)]
+      (proto/render-start renderer e)
+      (->> (.getStackTrace e)
+           (collect-available-entries opts)
+           (run! (fn [file]
+                   (let [content (load-entry-content file opts)]
+                     (proto/render-content renderer file content)))))
+      (proto/render-end renderer e))))
 
 (defn nav [e opts]
   (let [entries (or (some->> e
@@ -71,7 +72,8 @@
                              (collect-available-entries opts)
                              vec)
                     [])
-        index (atom -1)]
+        index (atom -1)
+        renderer (render/make-print-renderer opts)]
     (fn self
       ([] (self :next))
       ([arg]
@@ -86,6 +88,6 @@
            (when (< i (count entries))
              (let [entry (get entries i)
                    content (load-entry-content entry opts)]
-               (render/render-content entry content opts)
+               (proto/render-content renderer entry content)
                (reset! index i)))))
        nil))))
