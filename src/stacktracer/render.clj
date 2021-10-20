@@ -1,4 +1,4 @@
-(ns stacktracer.printer
+(ns stacktracer.render
   (:require [clojure.string :as str]))
 
 (defn- compact-fn-name [qualified-fname]
@@ -15,11 +15,11 @@
         (print fname))
       qualified-fname)))
 
-(defn print-message [^Throwable e _opts]
+(defn render-message [^Throwable e _opts]
   (printf "%s %s\n" (.getSimpleName (class e)) (.getMessage e))
   (newline))
 
-(defn print-content [{fname :fn :keys [file line]} content opts]
+(defn render-content [{fname :fn :keys [file line]} content opts]
   (let [{:keys [before focused after]} content
         ndigits (count (str (+ line (count after))))
         times (fn [n c]
