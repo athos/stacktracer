@@ -1,7 +1,7 @@
 (ns stacktracer.printer
   (:require [stacktracer.protocols :as proto]))
 
-(defrecord MonochromePrinter []
+(defrecord MonochromeConsolePrinter []
   proto/IPrinter
   (print [_ text]
     (print text))
@@ -10,7 +10,7 @@
   (with-alert [_ _ f]
     (f)))
 
-(defrecord AsciiColorPrinter []
+(defrecord AsciiColorConsolePrinter []
   proto/IPrinter
   (print [_ text]
     (print text))
@@ -22,3 +22,15 @@
       :danger (print "\u001b[31m"))
     (f)
     (print "\u001b[0m")))
+
+(defmulti make-printer (fn [opts] (:printer opts)))
+
+(defmethod make-printer :default [opts]
+  (if-let [printer (:printer opts)]
+    printer
+    (make-printer (assoc opts :printer :console))))
+
+(defmethod make-printer :console [opts]
+  (if (:color opts)
+    (->AsciiColorConsolePrinter)
+    (->MonochromeConsolePrinter)))

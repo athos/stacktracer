@@ -10,7 +10,4 @@
     (make-renderer (assoc opts :format :pretty))))
 
 (defmethod make-renderer :pretty [opts]
-  (let [printer (if (:color opts)
-                  (printer/->AsciiColorPrinter)
-                  (printer/->MonochromePrinter))]
-    (pretty/->PrettyRender printer opts)))
+  (pretty/->PrettyRender (printer/make-printer opts) opts))
