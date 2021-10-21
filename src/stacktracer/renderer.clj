@@ -1,5 +1,6 @@
 (ns stacktracer.renderer
-  (:require [stacktracer.printer :as printer]))
+  (:require [stacktracer.printer :as printer]
+            [stacktracer.renderer.pretty :as pretty]))
 
 (defmulti make-renderer (fn [opts] (:format opts)))
 
@@ -12,4 +13,4 @@
   (let [printer (if (:color opts)
                   (printer/->AsciiColorPrinter)
                   (printer/->MonochromePrinter))]
-    (printer/make-print-renderer printer opts)))
+    (pretty/->PrettyRender printer opts)))
