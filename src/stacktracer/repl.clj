@@ -2,14 +2,23 @@
   (:require [stacktracer.core :as st]
             [stacktracer.xforms :as sx]))
 
+(defn exclude-fns [& patterns]
+  (if (seq patterns)
+    (->> patterns
+         (map (fn [pat] (remove #(re-matches pat (:fn %)))))
+         (apply comp))
+    identity))
+
+(defn skip-internal-calls []
+  (sx/dedupe-by (juxt :class
+                      (fn [{m :method}]
+                        (get '{invoke invokeStatic
+                               doInvoke invokeStatic}
+                             m m)))))
+
 (def default-xform
-  (comp (remove #(re-matches #"(?:clojure|nrepl)\..*" (:fn %)))
-        (sx/dedupe-by (juxt :fn :method :file :line))
-        (sx/dedupe-by (juxt :class
-                            (fn [{m :method}]
-                              (get '{invoke invokeStatic
-                                     doInvoke invokeStatic}
-                                   m m))))))
+  (comp (exclude-fns #"clojure\..*" #"nrepl\..*")
+        (skip-internal-calls)))
 
 (def ^:private default-options
   (atom {:xform default-xform :lines 7 :limit 10
