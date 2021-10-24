@@ -30,20 +30,14 @@
 (defn update-default-options! [f & args]
   (apply swap! default-options f args))
 
-(defn root-cause [^Throwable t]
-  (when t
-    (if-let [cause (.getCause t)]
-      (recur cause)
-      t)))
-
 (defn pst-for [e & {:as opts}]
   (st/pst e (merge @default-options opts)))
 
 (defn pst [& args]
-  (apply pst-for (root-cause *e) args))
+  (apply pst-for *e args))
 
 (defn nav-for [e & {:as opts}]
   (st/nav e (merge @default-options opts)))
 
 (defn nav [& args]
-  (apply nav-for (root-cause *e) args))
+  (apply nav-for *e args))

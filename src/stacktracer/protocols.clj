@@ -7,6 +7,9 @@
   (with-alert [this alert f]))
 
 (defprotocol IRenderer
-  (render-start [this e])
+  (render-start [this t])
   (render-content [this info content])
-  (render-end [this e]))
+  (render-end [this t]))
+
+(defprotocol ToThrowableMap
+  (->throwable-map [this]))

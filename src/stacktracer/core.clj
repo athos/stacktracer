@@ -6,6 +6,15 @@
             [stacktracer.renderer :as renderer]
             [stacktracer.xforms :as sx]))
 
+(extend-protocol proto/ToThrowableMap
+  Object
+  (->throwable-map [this]
+    (when (and (map? this) (:trace this) (:via this))
+      this))
+  Throwable
+  (->throwable-map [this]
+    (Throwable->map this)))
+
 (defn- load-entry-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
     (let [line' (dec line)]
@@ -34,8 +43,8 @@
     start (comp (drop start))
     limit (comp (take limit))))
 
-(defn- collect-available-entries [opts stacktrace]
-  (->> (for [[class method file line] (map StackTraceElement->vec stacktrace)
+(defn- collect-available-elements [opts stacktrace]
+  (->> (for [[class method file line] stacktrace
              :when (not= file "NO_SOURCE_FILE")
              :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
                                                 (name class))
@@ -56,20 +65,20 @@
        (#(cond-> % (:reverse opts) reverse))))
 
 (defn pst [e opts]
-  (when e
+  (when-let [m (proto/->throwable-map e)]
     (let [renderer (renderer/make-renderer opts)]
-      (proto/render-start renderer e)
-      (->> (.getStackTrace e)
-           (collect-available-entries opts)
+      (proto/render-start renderer m)
+      (->> (:trace m)
+           (collect-available-elements opts)
            (run! (fn [file]
                    (let [content (load-entry-content file opts)]
                      (proto/render-content renderer file content)))))
-      (proto/render-end renderer e))))
+      (proto/render-end renderer m))))
 
 (defn nav [e opts]
-  (let [entries (or (some->> e
-                             (.getStackTrace)
-                             (collect-available-entries opts)
+  (let [entries (or (some->> (proto/->throwable-map e)
+                             :trace
+                             (collect-available-elements opts)
                              vec)
                     [])
         index (atom -1)
