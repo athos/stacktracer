@@ -31,6 +31,7 @@
     (make-printer (assoc opts :printer :console))))
 
 (defmethod make-printer :console [opts]
-  (if (:color opts)
-    (->AsciiColorConsolePrinter)
-    (->MonochromeConsolePrinter)))
+  (binding [*out* (or (:output-to opts) *err*)]
+    (if (:color opts)
+      (->AsciiColorConsolePrinter)
+      (->MonochromeConsolePrinter))))
