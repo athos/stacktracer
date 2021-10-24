@@ -1,4 +1,4 @@
-(ns stacktracer.printer.pretty
+(ns stacktracer.renderer.pretty
   (:refer-clojure :exclude [printf])
   (:require [clojure.string :as str]
             [stacktracer.protocols :as proto]))

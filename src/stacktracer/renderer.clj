@@ -10,4 +10,4 @@
     (make-renderer (assoc opts :format :pretty))))
 
 (defmethod make-renderer :pretty [opts]
-  (pretty/->PrettyRender (printer/make-printer opts) opts))
+  (pretty/->PrettyRenderer (printer/make-printer opts) opts))
