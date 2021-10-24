@@ -16,9 +16,13 @@
                                doInvoke invokeStatic}
                              m m)))))
 
+(defn skip-duplicate-sites []
+  (sx/dedupe-by (juxt :file :line)))
+
 (def default-xform
   (comp (exclude-fns #"clojure\..*" #"nrepl\..*")
-        (skip-internal-calls)))
+        (skip-internal-calls)
+        (skip-duplicate-sites)))
 
 (def ^:private default-options
   (atom {:xform default-xform :lines 7 :limit 10
