@@ -1,5 +1,4 @@
-(ns stacktracer.conversion
-  (:require [clojure.java.io :as io]))
+(ns stacktracer.conversion)
 
 (defn- parse-java-stacktrace [lines]
   (reduce (fn [acc line]
