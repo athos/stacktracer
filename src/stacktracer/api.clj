@@ -1,28 +1,12 @@
 (ns stacktracer.api
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [stacktracer.conversion :as conv]
-            [stacktracer.repl :as st])
-  (:import [java.io PushbackReader]))
+  (:require [stacktracer.reformat :as reformat]))
 
-(defn- reformat-report-edn [{:keys [path] :as opts}]
-  (let [edn (if path
-              (with-open [r (PushbackReader. (io/reader (str path)))]
-                (edn/read r))
-              (edn/read *in*))
+(defn reformat [{:keys [from file] :or {from :error-report} :as opts}]
+  (let [in (or file *in*)
         args (apply concat opts)]
-    (apply st/pst-for (:clojure.main/trace edn) args)))
+    (case (keyword from)
+      :report-edn
+      (apply reformat/reformat-report-edn in args)
 
-(defn- reformat-java-stacktrace [{:keys [path] :as opts}]
-  (let [converted (with-open [r (io/reader (or path *in*))]
-                    (conv/convert-from-java-stacktrace r))
-        args (apply concat opts)]
-    (apply st/pst-for converted args)))
-
-(defn reformat [{:keys [from] :or {from :error-report} :as opts}]
-  (case (name from)
-    "report-edn"
-    (reformat-report-edn opts)
-
-    "java-stacktrace"
-    (reformat-java-stacktrace opts)))
+      :java-stacktrace
+      (apply reformat/reformat-java-stacktrace in args))))
