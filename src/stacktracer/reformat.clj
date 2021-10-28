@@ -36,14 +36,23 @@
                 parsed)
      :data {}}))
 
-(defn reformat-report-edn [r & {:keys [opts]}]
-  (let [edn (with-open [r (PushbackReader. (io/reader r))]
-              (edn/read r))
+(defn reformat-report-edn [r & {:as opts}]
+  (let [edn (edn/read r)
         args (apply concat opts)]
     (apply st/pst-for (:clojure.main/trace edn) args)))
 
-(defn reformat-java-stacktrace [r & {:keys [opts]}]
-  (let [converted (with-open [r (io/reader r)]
-                    (convert-from-java-stacktrace r))
+(defn reformat-java-stacktrace [r & {:as opts}]
+  (let [converted (convert-from-java-stacktrace r)
         args (apply concat opts)]
     (apply st/pst-for converted args)))
+
+(defn guess-format [^PushbackReader r]
+  (when-let [c (loop []
+                 (let [c (.read r)]
+                   (cond (neg? c) nil
+                         (Character/isSpaceChar c) (recur)
+                         :else c)))]
+    (.unread r c)
+    (case (char c)
+      \{ :report-edn
+      :java-stacktrace)))
