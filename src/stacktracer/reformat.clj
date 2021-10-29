@@ -1,6 +1,5 @@
 (ns stacktracer.reformat
   (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
             [stacktracer.repl :as st])
   (:import [java.io PushbackReader]))
 
@@ -19,9 +18,9 @@
               :>> (fn [[_ method file line]]
                     (let [[_ class method] (re-matches #"(.*?)\.([^.]+)" method)]
                       (update-in acc [(dec (count acc)) :trace]
-                               (fnil conj [])
-                               [(symbol class) (symbol method)
-                                file (Long/parseLong line)])))
+                                 (fnil conj [])
+                                 [(symbol class) (symbol method)
+                                  file (Long/parseLong line)])))
 
               acc))
           [] lines))
