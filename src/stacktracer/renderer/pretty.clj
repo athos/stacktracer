@@ -36,27 +36,39 @@
   (render-start [_ e]
     (when (:show-message opts)
       (proto/with-alert printer :danger
-        #(printf printer "%s\n" (proto/ex-message e)))))
+        #(doto printer
+           (printf "%s" (proto/ex-message e))
+           (proto/newline)))))
   (render-content [_ {fname :fn :keys [file line]} content]
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))
           pad #(pad ndigits %)]
       (proto/with-alert printer :info
-        #(printf printer "   ---- %s (%s:%d) ----\n"
-                 (compact-fn-name fname) file line))
+        #(doto printer
+           (printf "   ---- %s (%s:%d) ----"
+                   (compact-fn-name fname) file line)
+           (proto/newline)))
       (doseq [[i text] (map-indexed vector before)
               :let [i' (- line (count before) (- i))]]
-        (printf printer "   %s| %s\n" (pad i') text))
+        (doto printer
+          (printf "   %s| %s" (pad i') text)
+          (proto/newline)))
       (proto/with-alert printer :danger
-        #(printf printer "=> %s| %s\n" (pad line) focused))
+        #(doto printer
+           (printf "=> %s| %s" (pad line) focused)
+           (proto/newline)))
       (let [i (->> focused
                    (map-indexed vector)
                    (drop-while (fn [[_ c]] (Character/isWhitespace c)))
                    (ffirst))]
         (proto/with-alert printer :danger
-          #(printf printer "   %s|%s%s\n" (pad "") (times (inc i) \space)
-                   (times (- (count focused) i) \^))))
+          #(doto printer
+             (printf "   %s|%s%s" (pad "") (times (inc i) \space)
+                     (times (- (count focused) i) \^))
+             (proto/newline))))
       (doseq [[i text] (map-indexed vector after)]
-        (printf printer "   %s| %s\n" (pad (+ line i 1)) text)))
+        (doto printer
+          (printf "   %s| %s" (pad (+ line i 1)) text)
+          (proto/newline))))
     (proto/newline printer))
   (render-end [_ _]))
