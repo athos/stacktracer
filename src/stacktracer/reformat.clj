@@ -1,5 +1,6 @@
 (ns stacktracer.reformat
   (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [stacktracer.protocols :as proto]
             [stacktracer.repl :as st])
   (:import [java.io PushbackReader]))
@@ -14,9 +15,10 @@
 (defn from-report-edn [r]
   (->ReportEdn (edn/read r)))
 
-(defn reformat-report-edn [r & {:as opts}]
-  (let [args (apply concat opts)]
-    (apply st/pst-for (from-report-edn r) args)))
+(defn reformat-report-edn [in & {:as opts}]
+  (with-open [r (PushbackReader. (io/reader in))]
+    (let [args (apply concat opts)]
+      (apply st/pst-for (from-report-edn r) args))))
 
 (defrecord JavaStacktrace [type message trace]
   proto/IStacktrace
@@ -50,9 +52,10 @@
         {:keys [type message trace]} (last parsed)]
     (->JavaStacktrace type message trace)))
 
-(defn reformat-java-stacktrace [r & {:as opts}]
-  (let [args (apply concat opts)]
-    (apply st/pst-for (from-java-stacktrace r) args)))
+(defn reformat-java-stacktrace [in & {:as opts}]
+  (with-open [r (io/reader in)]
+    (let [args (apply concat opts)]
+      (apply st/pst-for (from-java-stacktrace r) args))))
 
 (defn guess-format [^PushbackReader r]
   (when-let [c (loop []
