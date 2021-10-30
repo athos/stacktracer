@@ -2,7 +2,7 @@
 
 A small development utility to print stack trace with code context
 
-<img src="doc/demo.png" alt="demo image" width="700">
+<img src="doc/demo.gif" alt="demo image" width="700">
 
 ## Usage
 
