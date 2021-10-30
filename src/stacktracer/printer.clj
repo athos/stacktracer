@@ -10,18 +10,23 @@
   (with-alert [_ _ f]
     (f)))
 
-(defrecord AsciiColorConsolePrinter []
+(def default-colors
+  {:info "\u001b[36m"
+   :danger "\u001b[31;1m"})
+
+(def ^:private ^:dynamic *current-alert* nil)
+
+(defrecord AsciiColorConsolePrinter [colors]
   proto/IPrinter
   (print [_ text]
     (print text))
   (newline [_]
     (newline))
   (with-alert [_ alert f]
-    (case alert
-      :info (print "\u001b[36m")
-      :danger (print "\u001b[31m"))
-    (f)
-    (print "\u001b[0m")))
+    (binding [*current-alert* alert]
+      (print (get colors alert))
+      (f))
+    (print (or (some-> alert (get colors)) "\u001b[0m"))))
 
 (defmulti make-printer (fn [opts] (:printer opts)))
 
@@ -33,5 +38,6 @@
 (defmethod make-printer :console [opts]
   (binding [*out* (or (:output-to opts) *err*)]
     (if (:color opts)
-      (->AsciiColorConsolePrinter)
+      (let [colors (merge default-colors (:colors opts))]
+        (->AsciiColorConsolePrinter colors))
       (->MonochromeConsolePrinter))))
