@@ -4,7 +4,7 @@
 (defprotocol IPrinter
   (print [this text])
   (newline [this])
-  (with-alert [this alert f]))
+  (with-color-type [this color-type f]))
 
 (defprotocol IRenderer
   (render-start [this e])

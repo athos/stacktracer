@@ -35,7 +35,7 @@
   proto/IRenderer
   (render-start [_ e]
     (when (:show-message opts)
-      (proto/with-alert printer :danger
+      (proto/with-color-type printer :error
         #(doto printer
            (printf "%s" (proto/ex-message e))
            (proto/newline)))))
@@ -43,7 +43,7 @@
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))
           pad #(pad ndigits %)]
-      (proto/with-alert printer :info
+      (proto/with-color-type printer :info
         #(doto printer
            (printf "   ---- %s (%s:%d) ----"
                    (compact-fn-name fname) file line)
@@ -53,7 +53,7 @@
         (doto printer
           (printf "   %s| %s" (pad i') text)
           (proto/newline)))
-      (proto/with-alert printer :danger
+      (proto/with-color-type printer :error
         #(doto printer
            (printf "=> %s| %s" (pad line) focused)
            (proto/newline)))
@@ -61,7 +61,7 @@
                    (map-indexed vector)
                    (drop-while (fn [[_ c]] (Character/isWhitespace c)))
                    (ffirst))]
-        (proto/with-alert printer :danger
+        (proto/with-color-type printer :error
           #(doto printer
              (printf "   %s|%s%s" (pad "") (times (inc i) \space)
                      (times (- (count focused) i) \^))

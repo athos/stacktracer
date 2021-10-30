@@ -7,14 +7,14 @@
     (print text))
   (newline [_]
     (newline))
-  (with-alert [_ _ f]
+  (with-color-type [_ _ f]
     (f)))
 
 (def default-colors
   {:info "\u001b[36m"
-   :danger "\u001b[31;1m"})
+   :error "\u001b[31;1m"})
 
-(def ^:private ^:dynamic *current-alert* nil)
+(def ^:private ^:dynamic *current-color-type* nil)
 
 (defrecord AsciiColorConsolePrinter [colors]
   proto/IPrinter
@@ -22,11 +22,11 @@
     (print text))
   (newline [_]
     (newline))
-  (with-alert [_ alert f]
-    (binding [*current-alert* alert]
-      (print (get colors alert))
+  (with-color-type [_ color-type f]
+    (binding [*current-color-type* color-type]
+      (print (get colors color-type))
       (f))
-    (print (or (some-> alert (get colors)) "\u001b[0m"))))
+    (print (or (some-> color-type (get colors)) "\u001b[0m"))))
 
 (defmulti make-printer (fn [opts] (:printer opts)))
 
