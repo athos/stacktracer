@@ -33,12 +33,10 @@
 
 (defrecord PrettyRenderer [printer opts]
   proto/IRenderer
-  (render-start [_ t]
+  (render-start [_ e]
     (when (:show-message opts)
-      (let [{:keys [type message]} (last (:via t))
-            [_ simple-name] (re-matches #".*?([^.]+)$" (name type))]
-        (proto/with-alert printer :danger
-          #(printf printer "%s: %s\n\n" simple-name message)))))
+      (proto/with-alert printer :danger
+        #(printf printer "%s\n" (proto/ex-message e)))))
   (render-content [_ {fname :fn :keys [file line]} content]
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))

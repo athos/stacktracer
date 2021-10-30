@@ -1,5 +1,5 @@
 (ns stacktracer.protocols
-  (:refer-clojure :exclude [print newline]))
+  (:refer-clojure :exclude [print newline ex-message]))
 
 (defprotocol IPrinter
   (print [this text])
@@ -7,9 +7,10 @@
   (with-alert [this alert f]))
 
 (defprotocol IRenderer
-  (render-start [this t])
+  (render-start [this e])
   (render-content [this info content])
-  (render-end [this t]))
+  (render-end [this e]))
 
-(defprotocol ToThrowableMap
-  (->throwable-map [this]))
+(defprotocol IStacktrace
+  (ex-message [this])
+  (ex-trace [this]))

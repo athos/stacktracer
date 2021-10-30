@@ -1,19 +1,25 @@
 (ns stacktracer.core
   (:require [clojure.java.io :as io]
+            [clojure.main :as main]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [stacktracer.protocols :as proto]
             [stacktracer.renderer :as renderer]
             [stacktracer.xforms :as sx]))
 
-(extend-protocol proto/ToThrowableMap
+(extend-protocol proto/IStacktrace
   Object
-  (->throwable-map [this]
-    (when (and (map? this) (:trace this) (:via this))
-      this))
+  (ex-message [this]
+    (when (and (map? this) (:trace this))
+      (main/ex-str (main/ex-triage this))))
+  (ex-trace [this]
+    (when (and (map? this) (:trace this))
+      (:trace this)))
   Throwable
-  (->throwable-map [this]
-    (Throwable->map this)))
+  (ex-message [this]
+    (main/err->msg this))
+  (ex-trace [this]
+    (:trace (Throwable->map this))))
 
 (defn- load-entry-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
@@ -65,19 +71,18 @@
        (#(cond-> % (:reverse opts) reverse))))
 
 (defn pst [e opts]
-  (when-let [m (proto/->throwable-map e)]
+  (when e
     (let [renderer (renderer/make-renderer opts)]
-      (proto/render-start renderer m)
-      (->> (:trace m)
+      (proto/render-start renderer e)
+      (->> (proto/ex-trace e)
            (collect-available-elements opts)
            (run! (fn [file]
                    (let [content (load-entry-content file opts)]
                      (proto/render-content renderer file content)))))
-      (proto/render-end renderer m))))
+      (proto/render-end renderer e))))
 
 (defn nav [e opts]
-  (let [entries (or (some->> (proto/->throwable-map e)
-                             :trace
+  (let [entries (or (some->> (:trace e)
                              (collect-available-elements opts)
                              vec)
                     [])

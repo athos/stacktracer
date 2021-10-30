@@ -1,7 +1,27 @@
 (ns stacktracer.reformat
   (:require [clojure.edn :as edn]
+            [stacktracer.protocols :as proto]
             [stacktracer.repl :as st])
   (:import [java.io PushbackReader]))
+
+(defrecord ReportEdn [data]
+  proto/IStacktrace
+  (ex-message [_]
+    (:clojure.main/message data))
+  (ex-trace [_]
+    (:trace (:clojure.main/trace data))))
+
+(defn from-report-edn [r]
+  (->ReportEdn (edn/read r)))
+
+(defn reformat-report-edn [r & {:as opts}]
+  (let [args (apply concat opts)]
+    (apply st/pst-for (from-report-edn r) args)))
+
+(defrecord JavaStacktrace [type message trace]
+  proto/IStacktrace
+  (ex-message [_] (str type ": " message))
+  (ex-trace [_] trace))
 
 (defn- parse-java-stacktrace [lines]
   (reduce (fn [acc line]
@@ -25,25 +45,14 @@
               acc))
           [] lines))
 
-(defn- convert-from-java-stacktrace [r]
+(defn from-java-stacktrace [r]
   (let [parsed (parse-java-stacktrace (line-seq r))
-        {:keys [message trace]} (last parsed)]
-    {:cause message
-     :trace trace
-     :via (mapv (fn [{:keys [type message trace]}]
-                  {:type type :message message :at (first trace)})
-                parsed)
-     :data {}}))
-
-(defn reformat-report-edn [r & {:as opts}]
-  (let [edn (edn/read r)
-        args (apply concat opts)]
-    (apply st/pst-for (:clojure.main/trace edn) args)))
+        {:keys [type message trace]} (last parsed)]
+    (->JavaStacktrace type message trace)))
 
 (defn reformat-java-stacktrace [r & {:as opts}]
-  (let [converted (convert-from-java-stacktrace r)
-        args (apply concat opts)]
-    (apply st/pst-for converted args)))
+  (let [args (apply concat opts)]
+    (apply st/pst-for (from-java-stacktrace r) args)))
 
 (defn guess-format [^PushbackReader r]
   (when-let [c (loop []
