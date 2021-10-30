@@ -20,7 +20,7 @@
 
 (defrecord JavaStacktrace [type message trace]
   proto/IStacktrace
-  (ex-message [_] (str type ": " message))
+  (ex-message [_] (format "%s: %s\n" type message))
   (ex-trace [_] trace))
 
 (defn- parse-java-stacktrace [lines]
