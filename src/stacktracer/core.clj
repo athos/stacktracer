@@ -82,7 +82,7 @@
       (proto/render-end renderer e))))
 
 (defn nav [e opts]
-  (let [elems (or (some->> (:trace e)
+  (let [elems (or (some->> (proto/ex-trace e)
                            (collect-available-elements opts)
                            vec)
                   [])
