@@ -36,9 +36,10 @@
   (render-start [_ e]
     (when (:show-message opts)
       (proto/with-color-type printer :error
-        #(doto printer
-           (printf "%s" (proto/ex-message e))
-           (proto/newline)))))
+        #(doseq [line (proto/ex-message-lines e)]
+           (doto printer
+             (proto/print line)
+             (proto/newline))))))
   (render-content [_ {fname :fn :keys [file line]} content]
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))

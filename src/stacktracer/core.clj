@@ -9,15 +9,17 @@
 
 (extend-protocol proto/IStacktrace
   Object
-  (ex-message [this]
+  (ex-message-lines [this]
     (when (and (map? this) (:trace this))
-      (main/ex-str (main/ex-triage this))))
+      (-> (main/ex-triage this)
+          main/ex-str
+          str/split-lines)))
   (ex-trace [this]
     (when (and (map? this) (:trace this))
       (:trace this)))
   Throwable
-  (ex-message [this]
-    (main/err->msg this))
+  (ex-message-lines [this]
+    (str/split-lines (main/err->msg this)))
   (ex-trace [this]
     (:trace (Throwable->map this))))
 
