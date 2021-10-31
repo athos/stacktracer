@@ -40,7 +40,15 @@
            (doto printer
              (proto/print line)
              (proto/newline))))))
-  (render-content [_ {fname :fn :keys [file line]} content]
+  (render-trace [this elems contents]
+    (when (and (:show-message opts) (seq elems))
+      (proto/newline printer))
+    (let [len (count elems)]
+      (doseq [[i elem content] (map vector (range) elems contents)]
+        (proto/render-trace-element this elem content)
+        (when (< i (dec len))
+          (proto/newline printer)))))
+  (render-trace-element [_ {fname :fn :keys [file line]} content]
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))
           pad #(pad ndigits %)]
@@ -70,6 +78,5 @@
       (doseq [[i text] (map-indexed vector after)]
         (doto printer
           (printf "   %s| %s" (pad (+ line i 1)) text)
-          (proto/newline))))
-    (proto/newline printer))
+          (proto/newline)))))
   (render-end [_ _]))

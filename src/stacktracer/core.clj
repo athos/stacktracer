@@ -23,7 +23,7 @@
   (ex-trace [this]
     (:trace (Throwable->map this))))
 
-(defn- load-entry-content [{:keys [resource line]} {nlines :lines}]
+(defn- load-element-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
     (let [line' (dec line)]
       (->> (line-seq r)
@@ -74,20 +74,18 @@
 
 (defn pst [e opts]
   (when e
-    (let [renderer (renderer/make-renderer opts)]
+    (let [renderer (renderer/make-renderer opts)
+          elems (collect-available-elements opts (proto/ex-trace e))
+          contents (map #(load-element-content % opts) elems)]
       (proto/render-start renderer e)
-      (->> (proto/ex-trace e)
-           (collect-available-elements opts)
-           (run! (fn [file]
-                   (let [content (load-entry-content file opts)]
-                     (proto/render-content renderer file content)))))
+      (proto/render-trace renderer elems contents)
       (proto/render-end renderer e))))
 
 (defn nav [e opts]
-  (let [entries (or (some->> (:trace e)
-                             (collect-available-elements opts)
-                             vec)
-                    [])
+  (let [elems (or (some->> (:trace e)
+                           (collect-available-elements opts)
+                           vec)
+                  [])
         index (atom -1)
         renderer (renderer/make-renderer opts)]
     (fn self
@@ -99,11 +97,11 @@
                    :prev (max (dec @index) 0)
                    :next (inc @index)
                    (if (neg? arg)
-                     (+ (count entries) arg)
+                     (+ (count elems) arg)
                      arg))]
-           (when (< i (count entries))
-             (let [entry (get entries i)
-                   content (load-entry-content entry opts)]
-               (proto/render-content renderer entry content)
+           (when (< i (count elems))
+             (let [elem (get elems i)
+                   content (load-element-content elem opts)]
+               (proto/render-trace-element renderer elem content)
                (reset! index i)))))
        nil))))
