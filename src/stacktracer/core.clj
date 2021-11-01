@@ -74,34 +74,49 @@
 
 (defn pst [e opts]
   (when e
-    (let [renderer (renderer/make-renderer opts)
-          elems (collect-available-elements opts (proto/ex-trace e))
-          contents (map #(load-element-content % opts) elems)]
-      (proto/render-start renderer e)
-      (proto/render-trace renderer elems contents)
-      (proto/render-end renderer e))))
+    (try
+      (let [renderer (renderer/make-renderer opts)
+            elems (collect-available-elements opts (proto/ex-trace e))
+            contents (map #(load-element-content % opts) elems)]
+        (proto/render-start renderer e)
+        (proto/render-trace renderer elems contents)
+        (proto/render-end renderer e))
+      (catch Throwable _
+        (if-let [fallback-fn (:fallback-fn opts)]
+          (fallback-fn e)
+          (do
+            (binding [*out* *err*]
+              (println "[ERROR] Stacktracer failed to process the exception. Falls back to clojure.repl/pst."))
+            (repl/pst e)))))))
 
 (defn nav [e opts]
-  (let [elems (or (some->> (proto/ex-trace e)
-                           (collect-available-elements opts)
-                           vec)
-                  [])
-        index (atom -1)
-        renderer (renderer/make-renderer opts)]
-    (fn self
-      ([] (self :next))
-      ([arg]
-       (case arg
-         :reset (reset! index -1)
-         (let [i (case arg
-                   :prev (max (dec @index) 0)
-                   :next (inc @index)
-                   (if (neg? arg)
-                     (+ (count elems) arg)
-                     arg))]
-           (when (< i (count elems))
-             (let [elem (get elems i)
-                   content (load-element-content elem opts)]
-               (proto/render-trace-element renderer elem content)
-               (reset! index i)))))
-       nil))))
+  (try
+    (let [elems (or (some->> (proto/ex-trace e)
+                             (collect-available-elements opts)
+                             vec)
+                    [])
+          index (atom -1)
+          renderer (renderer/make-renderer opts)]
+      (fn self
+        ([] (self :next))
+        ([arg]
+         (case arg
+           :reset (reset! index -1)
+           (let [i (case arg
+                     :prev (max (dec @index) 0)
+                     :next (inc @index)
+                     (if (neg? arg)
+                       (+ (count elems) arg)
+                       arg))]
+             (when (< i (count elems))
+               (let [elem (get elems i)
+                     content (load-element-content elem opts)]
+                 (proto/render-trace-element renderer elem content)
+                 (reset! index i)))))
+         nil)))
+    (catch Throwable _
+      (if-let [fallback-fn (:fallback-fn opts)]
+        (fallback-fn e)
+        (binding [*out* *err*]
+          (println "[ERROR] Stacktracer failed to process the exception. Returns stub fn that does nothing.")
+          (fn [& _]))))))
