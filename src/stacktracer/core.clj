@@ -56,10 +56,10 @@
              :when (not= file "NO_SOURCE_FILE")
              :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
                                                 (name class))
-                   [_ simple-name] (some->> nsname (re-matches #".*\.([^.]+)$"))
+                   [_ simple-name] (some->> nsname (re-matches #"(?:.*\.)?([^.]+)$"))
                    [_ basename ext] (re-matches #"(.+)(\.cljc?)" file)]
              :when (and simple-name basename
-                        (= simple-name basename))
+                        (= (munge simple-name) basename))
              :let [path (-> (munge nsname)
                             (str/replace #"\." "/")
                             (str ext))
