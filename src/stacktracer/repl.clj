@@ -39,9 +39,3 @@
 
 (defn pst [& args]
   (apply pst-for *e args))
-
-(defn nav-for [e & {:as opts}]
-  (st/nav e (merge @default-options opts)))
-
-(defn nav [& args]
-  (apply nav-for *e args))
