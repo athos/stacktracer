@@ -39,3 +39,10 @@
 
 (defn pst [& args]
   (apply pst-for *e args))
+
+(defn capture-for [e & {:as opts}]
+  (fn [& {:as opts'}]
+    (st/pst e (merge @default-options opts opts'))))
+
+(defn capture [& args]
+  (apply capture-for *e args))
