@@ -26,7 +26,7 @@
         (skip-duplicate-sites)))
 
 (def ^:private default-options
-  (atom {:xform default-xform :lines 5 :limit 10
+  (atom {:xform default-xform :lines 5 :limit 5
          :color true :show-message true}))
 
 (defn set-default-options! [opts]
