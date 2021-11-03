@@ -72,19 +72,10 @@
        (sequence (build-xform opts))
        (#(cond-> % (:reverse opts) reverse))))
 
-(defn pst [e opts]
-  (when e
-    (try
-      (let [renderer (renderer/make-renderer opts)
-            elems (collect-available-elements opts (proto/ex-trace e))
-            contents (map #(load-element-content % opts) elems)]
-        (proto/render-start renderer e)
-        (proto/render-trace renderer elems contents)
-        (proto/render-end renderer e))
-      (catch Throwable _
-        (if-let [fallback-fn (:fallback-fn opts)]
-          (fallback-fn e)
-          (do
-            (binding [*out* *err*]
-              (println "[ERROR] Stacktracer failed to process the exception. Falls back to clojure.repl/pst."))
-            (repl/pst e)))))))
+(defn render-error [e opts]
+  (let [renderer (renderer/make-renderer opts)
+        elems (collect-available-elements opts (proto/ex-trace e))
+        contents (map #(load-element-content % opts) elems)]
+    (proto/render-start renderer e)
+    (proto/render-trace renderer elems contents)
+    (proto/render-end renderer e)))

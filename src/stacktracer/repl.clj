@@ -1,5 +1,6 @@
 (ns stacktracer.repl
-  (:require [stacktracer.core :as st]
+  (:require [clojure.repl :as repl]
+            [stacktracer.core :as st]
             [stacktracer.xforms :as sx]))
 
 (defn exclude-fns [& patterns]
@@ -34,15 +35,27 @@
 (defn update-default-options! [f & args]
   (apply swap! default-options f args))
 
+(defn default-fallback-fn [e]
+  (binding [*out* *err*]
+    (println "[ERROR] Stacktracer failed to process the exception. Falls back to clojure.repl/pst."))
+  (repl/pst e))
+
+(defn- pst* [e {:keys [fallback-fn] :as opts}]
+  (when e
+    (try
+      (st/render-error e opts)
+      (catch Throwable _
+        ((or fallback-fn default-fallback-fn) e)))))
+
 (defn pst-for [e & {:as opts}]
-  (st/pst e (merge @default-options opts)))
+  (pst* e (merge @default-options opts)))
 
 (defn pst [& args]
   (apply pst-for *e args))
 
 (defn capture-for [e & {:as opts}]
   (fn [& {:as opts'}]
-    (st/pst e (merge @default-options opts opts'))))
+    (pst* e (merge @default-options opts opts'))))
 
 (defn capture [& args]
   (apply capture-for *e args))
