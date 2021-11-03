@@ -69,8 +69,7 @@
          {:class class :method method
           :fn (repl/demunge (str nsname \$ fname))
           :resource res :file path :line line})
-       (sequence (build-xform opts))
-       (#(cond-> % (:reverse opts) reverse))))
+       (sequence (build-xform opts))))
 
 (defn render-error [e opts]
   (let [renderer (renderer/make-renderer opts)

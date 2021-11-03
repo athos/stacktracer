@@ -31,23 +31,34 @@
       (print (times (- n len) \space))
       (print text))))
 
+(defn- render-error-message [printer e]
+  (proto/with-color-type printer :error
+    #(doseq [line (proto/ex-message-lines e)]
+       (doto printer
+         (proto/print line)
+         (proto/newline)))))
+
 (defrecord PrettyRenderer [printer opts]
   proto/IRenderer
   (render-start [_ e]
-    (when (:show-message opts)
-      (proto/with-color-type printer :error
-        #(doseq [line (proto/ex-message-lines e)]
-           (doto printer
-             (proto/print line)
-             (proto/newline))))))
+    (when (and (:show-message opts)
+               (not (:reverse opts)))
+      (render-error-message printer e)))
   (render-trace [this elems contents]
-    (when (and (:show-message opts) (seq elems))
+    (when (and (:show-message opts)
+                (not (:reverse opts))
+                (seq elems))
       (proto/newline printer))
-    (let [len (count elems)]
+    (let [len (count elems)
+          elems (cond-> elems (:reverse opts) reverse)]
       (doseq [[i elem content] (map vector (range) elems contents)]
         (proto/render-trace-element this elem content)
         (when (< i (dec len))
-          (proto/newline printer)))))
+          (proto/newline printer))))
+    (when (and (:show-message opts)
+               (:reverse opts)
+               (seq elems))
+      (proto/newline printer)))
   (render-trace-element [_ {fname :fn :keys [file line]} content]
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))
@@ -79,4 +90,7 @@
         (doto printer
           (printf "   %s| %s" (pad (+ line i 1)) text)
           (proto/newline)))))
-  (render-end [_ _]))
+  (render-end [_ e]
+    (when (and (:show-message opts)
+               (:reverse opts))
+      (render-error-message printer e))))
