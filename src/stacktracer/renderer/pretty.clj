@@ -59,14 +59,14 @@
                (:reverse opts)
                (seq elems))
       (proto/newline printer)))
-  (render-trace-element [_ {fname :fn :keys [file line]} content]
+  (render-trace-element [_ {fname :fn :keys [id total file line]} content]
     (let [{:keys [before focused after]} content
           ndigits (count (str (+ line (count after))))
           pad #(pad ndigits %)]
       (proto/with-color-type printer :info
         #(doto printer
-           (printf "   ---- %s (%s:%d) ----"
-                   (compact-fn-name fname) file line)
+           (printf "   ---- [%d/%d] %s (%s:%d) ----"
+                   id total (compact-fn-name fname) file line)
            (proto/newline)))
       (doseq [[i text] (map-indexed vector before)
               :let [i' (- line (count before) (- i))]]

@@ -41,35 +41,43 @@
                            :else ret))
                    {})))))
 
-(defn- build-xform [{:keys [xform start end limit include exclude]}]
+(defn- build-xform [state {:keys [xform start end include exclude]}]
   (cond-> (or xform identity)
     include (comp (filter #(re-matches include (:fn %))))
     exclude (comp (remove #(re-matches exclude (:fn %))))
+    true (comp (map #(assoc % :id (swap! state inc))))
     end (as-> x (if (nat-int? end)
-                  (comp x (take end))
+                  (comp x (take (dec end)))
                   (comp x (sx/drop-last (- end)))))
-    start (comp (drop start))
-    limit (comp (take limit))))
+    start (comp (drop (dec start)))))
 
 (defn- collect-available-elements [opts stacktrace]
-  (->> (for [[class method file line] stacktrace
-             :when (not= file "NO_SOURCE_FILE")
-             :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
-                                                (name class))
-                   [_ simple-name] (some->> nsname (re-matches #"(?:.*\.)?([^.]+)$"))
-                   [_ basename ext] (re-matches #"(.+)(\.cljc?)" file)]
-             :when (and simple-name basename
-                        (= (munge simple-name) basename))
-             :let [path (-> (munge nsname)
-                            (str/replace #"\." "/")
-                            (str ext))
-                   res (-> (clojure.lang.RT/baseLoader)
-                           (.getResource path))]
-             :when res]
-         {:class class :method method
-          :fn (repl/demunge (str nsname \$ fname))
-          :resource res :file path :line line})
-       (sequence (build-xform opts))))
+  (let [state (atom 0)]
+    (as-> stacktrace elems
+      (for [[class method file line] elems
+            :when (not= file "NO_SOURCE_FILE")
+            :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
+                                               (name class))
+                  [_ simple-name] (some->> nsname (re-matches #"(?:.*\.)?([^.]+)$"))
+                  [_ basename ext] (re-matches #"(.+)(\.cljc?)" file)]
+            :when (and simple-name basename
+                       (= (munge simple-name) basename))
+            :let [path (-> (munge nsname)
+                           (str/replace #"\." "/")
+                           (str ext))
+                  res (-> (clojure.lang.RT/baseLoader)
+                          (.getResource path))]
+            :when res]
+        {:class class :method method
+         :fn (repl/demunge (str nsname \$ fname))
+         :resource res :file path :line line})
+      (into [] (build-xform state opts) elems)
+      (into []
+            (comp (map #(assoc % :total @state))
+                  (if-let [limit (:limit opts)]
+                    (take limit)
+                    identity))
+            elems))))
 
 (defn render-error [e opts]
   (let [renderer (renderer/make-renderer opts)
