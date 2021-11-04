@@ -21,7 +21,20 @@
   (ex-message-lines [this]
     (str/split-lines (main/err->msg this)))
   (ex-trace [this]
-    (:trace (Throwable->map this))))
+    (:trace (Throwable->map this)))
+  clojure.lang.Compiler$CompilerException
+  (ex-message-lines [this]
+    (-> (Throwable->map this)
+        main/ex-triage
+        main/ex-str
+        str/split-lines))
+  (ex-trace [this]
+    (let [{:clojure.error/keys [source line]} (ex-data this)
+          nsname (-> source
+                     (str/replace #"\.(?:clj|cljc)$" "")
+                     (str/replace #"/" "."))
+          filename (str/replace source #"(?:.*\/)?([^/]+)$" "$1")]
+      [[(symbol (str nsname \$ "<toplevel>")) '<none> filename line]])))
 
 (defn- load-element-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
