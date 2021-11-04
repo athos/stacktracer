@@ -50,7 +50,9 @@
                 (seq elems))
       (proto/newline printer))
     (let [len (count elems)
-          elems (cond-> elems (:reverse opts) reverse)]
+          [elems contents] (if (:reverse opts)
+                             [(reverse elems) (reverse contents)]
+                             [elems contents])]
       (doseq [[i elem content] (map vector (range) elems contents)]
         (proto/render-trace-element this elem content)
         (when (< i (dec len))
