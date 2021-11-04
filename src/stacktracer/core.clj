@@ -39,7 +39,7 @@
                            (update ret :after (fnil conj []) text)
 
                            :else ret))
-                   {})))))
+                   {:focused ""})))))
 
 (defn- build-xform [state {:keys [xform start end include exclude]}]
   (cond-> (or xform identity)

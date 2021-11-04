@@ -79,14 +79,17 @@
         #(doto printer
            (printf "=> %s| %s" (pad line) focused)
            (proto/newline)))
-      (let [i (->> focused
-                   (map-indexed vector)
-                   (drop-while (fn [[_ c]] (Character/isWhitespace c)))
-                   (ffirst))]
-        (proto/with-color-type printer :error
-          #(doto printer
+      (proto/with-color-type printer :error
+        #(if-let [i (->> focused
+                         (map-indexed vector)
+                         (drop-while (fn [[_ c]] (Character/isWhitespace c)))
+                         (ffirst))]
+           (doto printer
              (printf "   %s|%s%s" (pad "") (times (inc i) \space)
                      (times (- (count focused) i) \^))
+             (proto/newline))
+           (doto printer
+             (printf "   %s| ^^" (pad ""))
              (proto/newline))))
       (doseq [[i text] (map-indexed vector after)]
         (doto printer
