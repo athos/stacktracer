@@ -7,6 +7,13 @@
             [stacktracer.renderer :as renderer]
             [stacktracer.xforms :as sx]))
 
+(defn ex-data->compiler-exception-trace [{:clojure.error/keys [source line]}]
+  (let [nsname (-> source
+                   (str/replace #"\.(?:clj|cljc)$" "")
+                   (str/replace #"/" "."))
+        filename (str/replace source #"(?:.*\/)?([^/]+)$" "$1")]
+    [[(symbol (str nsname \$ "<toplevel>")) '<none> filename line]]))
+
 (extend-protocol proto/IStacktrace
   Object
   (ex-message-lines [this]
@@ -29,12 +36,7 @@
         main/ex-str
         str/split-lines))
   (ex-trace [this]
-    (let [{:clojure.error/keys [source line]} (ex-data this)
-          nsname (-> source
-                     (str/replace #"\.(?:clj|cljc)$" "")
-                     (str/replace #"/" "."))
-          filename (str/replace source #"(?:.*\/)?([^/]+)$" "$1")]
-      [[(symbol (str nsname \$ "<toplevel>")) '<none> filename line]])))
+    (ex-data->compiler-exception-trace (ex-data this))))
 
 (defn- load-element-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
