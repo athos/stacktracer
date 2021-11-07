@@ -1,10 +1,10 @@
 (ns stacktracer.reformat
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             [stacktracer.core :as s.core]
             [stacktracer.protocols :as proto]
-            [stacktracer.repl :as st]
-            [clojure.string :as str])
+            [stacktracer.repl :as st])
   (:import [java.io PushbackReader]))
 
 (defrecord ReportEdn [data]
