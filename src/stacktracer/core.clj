@@ -23,25 +23,22 @@
 
 (extend-protocol proto/IStacktrace
   Object
-  (ex-message-lines [this]
+  (ex-message [this]
     (when (and (map? this) (:trace this))
-      (-> (main/ex-triage this)
-          main/ex-str
-          str/split-lines)))
+      (main/ex-str (main/ex-triage this))))
   (ex-trace [this]
     (when (and (map? this) (:trace this))
       (:trace this)))
   Throwable
-  (ex-message-lines [this]
-    (str/split-lines (main/err->msg this)))
+  (ex-message [this]
+    (main/err->msg this))
   (ex-trace [this]
     (:trace (Throwable->map this)))
   clojure.lang.Compiler$CompilerException
-  (ex-message-lines [this]
+  (ex-message [this]
     (-> (Throwable->map this)
         main/ex-triage
-        main/ex-str
-        str/split-lines))
+        main/ex-str))
   (ex-trace [this]
     (ex-data->compiler-exception-trace (ex-data this))))
 

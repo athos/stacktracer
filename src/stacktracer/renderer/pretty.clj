@@ -33,7 +33,7 @@
 
 (defn- render-error-message [printer e]
   (proto/with-color-type printer :error
-    #(doseq [line (proto/ex-message-lines e)]
+    #(doseq [line (str/split-lines (proto/ex-message e))]
        (doto printer
          (proto/print line)
          (proto/newline)))))

@@ -1,7 +1,6 @@
 (ns stacktracer.reformat
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.string :as str]
             [stacktracer.core :as s.core]
             [stacktracer.protocols :as proto]
             [stacktracer.repl :as st])
@@ -9,8 +8,8 @@
 
 (defrecord ReportEdn [data]
   proto/IStacktrace
-  (ex-message-lines [_]
-    (str/split-lines (:clojure.main/message data)))
+  (ex-message [_]
+    (:clojure.main/message data))
   (ex-trace [_]
     (let [top-elem (first (:via (:clojure.main/trace data)))]
       (if (= (:type top-elem) 'clojure.lang.Compiler$CompilerException)
@@ -27,8 +26,8 @@
 
 (defrecord JavaStacktrace [type message trace]
   proto/IStacktrace
-  (ex-message-lines [_]
-    (str/split-lines (format "%s: %s" type message)))
+  (ex-message [_]
+    (format "%s: %s" type message))
   (ex-trace [_] trace))
 
 (defn- parse-java-stacktrace [lines]

@@ -1,5 +1,5 @@
 (ns stacktracer.protocols
-  (:refer-clojure :exclude [print newline]))
+  (:refer-clojure :exclude [ex-message newline print]))
 
 (defprotocol IPrinter
   (print [this text])
@@ -13,5 +13,5 @@
   (render-end [this e]))
 
 (defprotocol IStacktrace
-  (ex-message-lines [this])
+  (ex-message [this])
   (ex-trace [this]))
