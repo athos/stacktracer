@@ -29,18 +29,23 @@
   (ex-trace [this]
     (when (and (map? this) (:trace this))
       (:trace this)))
+  (ex-cause [this])
   Throwable
   (ex-message [this]
     (main/err->msg this))
   (ex-trace [this]
     (:trace (Throwable->map this)))
+  (ex-cause [this])
   clojure.lang.Compiler$CompilerException
   (ex-message [this]
     (-> (Throwable->map this)
         main/ex-triage
         main/ex-str))
   (ex-trace [this]
-    (ex-data->compiler-exception-trace (ex-data this))))
+    (ex-data->compiler-exception-trace (ex-data this)))
+  (ex-cause [this]
+    (when (= (:clojure.error/phase (ex-data this)) :macroexpansion)
+      (ex-cause this))))
 
 (defn- load-element-content [{:keys [resource line]} {nlines :lines}]
   (with-open [r (io/reader resource)]
@@ -70,9 +75,9 @@
                   (comp x (sx/drop-last (- end)))))
     start (comp (drop (dec start)))))
 
-(defn- collect-available-elements [opts stacktrace]
+(defn- collect-elements [opts e]
   (let [state (atom 0)]
-    (as-> stacktrace elems
+    (as-> (proto/ex-trace e) elems
       (for [[class method file line] elems
             :when (not= file "NO_SOURCE_FILE")
             :let [[_ nsname fname] (re-matches #"([^$]+)\$([^$]+)(?:\$.*)?"
@@ -99,9 +104,11 @@
             elems))))
 
 (defn render-error [e opts]
-  (let [renderer (renderer/make-renderer opts)
-        elems (collect-available-elements opts (proto/ex-trace e))
-        contents (map #(load-element-content % opts) elems)]
-    (proto/render-start renderer e)
-    (proto/render-trace renderer elems contents)
-    (proto/render-end renderer e)))
+  (let [renderer (renderer/make-renderer opts)]
+    (doseq [e (take-while identity (iterate proto/ex-cause e))
+            :let [elems (collect-elements opts e)
+                  contents (map #(load-element-content % opts) elems)]
+            :when (seq elems)]
+      (proto/render-start renderer e)
+      (proto/render-trace renderer elems contents)
+      (proto/render-end renderer e))))
