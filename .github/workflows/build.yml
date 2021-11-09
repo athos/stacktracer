@@ -1,0 +1,38 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    - name: Setup Clojure CLI
+      uses: DeLaGuardo/setup-clojure@3.5
+      with:
+        cli: latest
+    - name: Cache deps
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.m2
+          ~/.gitlibs
+          .cpcache
+        key: ${{ runner.os }}-${{ hashFiles('deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-
+    - name: Install deps
+      run: |
+        clojure -A:check -P
+    - name: Run check
+      run: clojure -M:check
+    # - name: Run tests for CLJ 1.10
+    # - name: Measure test coverage
+    #   run: clojure -A:test:coverage
+    # - name: Upload coverage report to CodeCov
+    #   uses: codecov/codecov-action@v1
