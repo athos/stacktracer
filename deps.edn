@@ -1,7 +1,12 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
- {:test
+ {:check
+  {:extra-deps
+   {com.github.athos/clj-check
+    {:git/sha "0ca84df1357d71429243b99908303f45a934654c"}}
+   :main-opts ["-m" "clj-check.check"]}
+  :test
   {:extra-paths ["test"]
    :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                 io.github.cognitect-labs/test-runner
