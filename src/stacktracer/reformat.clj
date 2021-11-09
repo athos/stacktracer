@@ -68,7 +68,7 @@
                    (cond (neg? c) nil
                          (Character/isSpaceChar c) (recur)
                          :else c)))]
-    (.unread r c)
+    (.unread r (int c))
     (case (char c)
       \{ :report-edn
       :java-stacktrace)))

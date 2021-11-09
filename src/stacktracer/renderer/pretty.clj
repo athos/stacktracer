@@ -82,7 +82,7 @@
       (proto/with-color-type printer :error
         #(if-let [i (->> focused
                          (map-indexed vector)
-                         (drop-while (fn [[_ c]] (Character/isWhitespace c)))
+                         (drop-while (fn [[_ c]] (Character/isWhitespace (char c))))
                          (ffirst))]
            (doto printer
              (printf "   %s|%s%s" (pad "") (times (inc i) \space)
