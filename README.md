@@ -1,4 +1,5 @@
 # stacktracer
+[![build](https://github.com/athos/stacktracer/actions/workflows/build.yml/badge.svg)](https://github.com/athos/stacktracer/actions/workflows/build.yml)
 
 A small development utility to print stack trace with code context
 
