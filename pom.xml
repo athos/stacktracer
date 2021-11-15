@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.clojars.athos</groupId>
+  <groupId>dev.athos</groupId>
   <artifactId>stacktracer</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <name>org.clojars.athos/stacktracer</name>
+  <name>dev.athos/stacktracer</name>
   <description>A small development utility to print stack trace with code context</description>
   <url>https://github.com/athos/stacktracer</url>
   <licenses>

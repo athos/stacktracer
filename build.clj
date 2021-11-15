@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [test])
   (:require [org.corfield.build :as bb]))
 
-(def lib 'org.clojars.athos/stacktracer)
+(def lib 'dev.athos/stacktracer)
 (def version "0.1.0-SNAPSHOT")
 
 (defn test "Run the tests." [opts]
