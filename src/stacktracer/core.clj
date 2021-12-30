@@ -29,13 +29,13 @@
   (ex-trace [this]
     (when (and (map? this) (:trace this))
       (:trace this)))
-  (ex-cause [this])
+  (ex-cause [_])
   Throwable
   (ex-message [this]
     (main/err->msg this))
   (ex-trace [this]
     (:trace (Throwable->map this)))
-  (ex-cause [this])
+  (ex-cause [_])
   clojure.lang.Compiler$CompilerException
   (ex-message [this]
     (-> (Throwable->map this)
