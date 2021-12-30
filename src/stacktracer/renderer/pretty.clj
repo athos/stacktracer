@@ -5,26 +5,22 @@
 
 (defrecord PrettyRenderer [printer opts]
   proto/IRenderer
-  (render-start [_ e]
-    (when (and (:show-message opts)
-               (not (:reverse opts)))
-      (common/render-error-message printer e)))
-  (render-trace [this elems]
-    (when (and (:show-message opts)
-                (not (:reverse opts))
-                (seq elems))
-      (proto/newline printer))
+  (render-trace [this e elems]
+    (when (and (:show-message opts) (not (:reverse opts)))
+      (common/render-error-message printer e)
+      (when (seq elems)
+        (proto/newline printer)))
     (let [len (count elems)
           elems (cond-> elems (:reverse opts) reverse)]
       (doseq [[i elem] (map-indexed vector elems)]
-        (proto/render-trace-element this elem)
+        (proto/render-trace-element this e elem)
         (when (< i (dec len))
           (proto/newline printer))))
-    (when (and (:show-message opts)
-               (:reverse opts)
-               (seq elems))
-      (proto/newline printer)))
-  (render-trace-element [_ {:keys [line before focused after] :as elem}]
+    (when (and (:show-message opts) (:reverse opts))
+      (when (seq elems)
+        (proto/newline printer))
+      (common/render-error-message printer e)))
+  (render-trace-element [_ _ {:keys [line before focused after] :as elem}]
     (let [ndigits (count (str (+ line (count after))))
           pad #(common/pad ndigits %)]
       (proto/with-color-type printer :info
@@ -58,8 +54,4 @@
       (doseq [[i text] (map-indexed vector after)]
         (doto printer
           (common/printf "   %s| %s" (pad (+ line i 1)) text)
-          (proto/newline)))))
-  (render-end [_ e]
-    (when (and (:show-message opts)
-               (:reverse opts))
-      (common/render-error-message printer e))))
+          (proto/newline))))))

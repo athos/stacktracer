@@ -109,6 +109,4 @@
             :let [elems (map #(merge % (load-element-content % opts))
                              (collect-elements opts e))]
             :when (seq elems)]
-      (proto/render-start renderer e)
-      (proto/render-trace renderer elems)
-      (proto/render-end renderer e))))
+      (proto/render-trace renderer e elems))))
