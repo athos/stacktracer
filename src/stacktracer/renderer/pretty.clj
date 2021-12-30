@@ -1,5 +1,4 @@
 (ns stacktracer.renderer.pretty
-  (:refer-clojure :exclude [printf])
   (:require [stacktracer.protocols :as proto]
             [stacktracer.renderer.common :as common]))
 
