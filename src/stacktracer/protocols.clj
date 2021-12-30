@@ -8,8 +8,8 @@
 
 (defprotocol IRenderer
   (render-start [this e])
-  (render-trace [this elems contents])
-  (render-trace-element [this elem content])
+  (render-trace [this elems])
+  (render-trace-element [this elem])
   (render-end [this e]))
 
 (defprotocol IStacktrace

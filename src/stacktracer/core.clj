@@ -106,9 +106,9 @@
 (defn render-error [e opts]
   (let [renderer (renderer/make-renderer opts)]
     (doseq [e (take-while identity (iterate proto/ex-cause e))
-            :let [elems (collect-elements opts e)
-                  contents (map #(load-element-content % opts) elems)]
+            :let [elems (map #(merge % (load-element-content % opts))
+                             (collect-elements opts e))]
             :when (seq elems)]
       (proto/render-start renderer e)
-      (proto/render-trace renderer elems contents)
+      (proto/render-trace renderer elems)
       (proto/render-end renderer e))))

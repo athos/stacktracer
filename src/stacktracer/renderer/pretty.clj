@@ -9,31 +9,30 @@
     (when (and (:show-message opts)
                (not (:reverse opts)))
       (common/render-error-message printer e)))
-  (render-trace [this elems contents]
+  (render-trace [this elems]
     (when (and (:show-message opts)
                 (not (:reverse opts))
                 (seq elems))
       (proto/newline printer))
     (let [len (count elems)
-          [elems contents] (if (:reverse opts)
-                             [(reverse elems) (reverse contents)]
-                             [elems contents])]
-      (doseq [[i elem content] (map vector (range) elems contents)]
-        (proto/render-trace-element this elem content)
+          elems (cond-> elems (:reverse opts) reverse)]
+      (doseq [[i elem] (map-indexed vector elems)]
+        (proto/render-trace-element this elem)
         (when (< i (dec len))
           (proto/newline printer))))
     (when (and (:show-message opts)
                (:reverse opts)
                (seq elems))
       (proto/newline printer)))
-  (render-trace-element [_ {fname :fn :keys [id total file line]} content]
-    (let [{:keys [before focused after]} content
-          ndigits (count (str (+ line (count after))))
+  (render-trace-element [_ {:keys [line before focused after] :as elem}]
+    (let [ndigits (count (str (+ line (count after))))
           pad #(common/pad ndigits %)]
       (proto/with-color-type printer :info
         #(doto printer
            (common/printf "   ---- [%d/%d] %s (%s:%d) ----"
-                   id total (common/compact-fn-name fname) file line)
+                          (:id elem) (:total elem)
+                          (common/compact-fn-name (:fn elem))
+                          (:file elem) line)
            (proto/newline)))
       (doseq [[i text] (map-indexed vector before)
               :let [i' (- line (count before) (- i))]]
