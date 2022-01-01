@@ -45,8 +45,7 @@
       (common/render-error-message printer e)
       (when (seq elems)
         (proto/newline printer)))
-    (let [len (count elems)
-          elems (cond-> elems (:reverse opts) reverse)]
+    (let [len (count elems)]
       (doseq [[i elem] (map-indexed vector elems)]
         (render-trace-element this elem)
         (when (< i (dec len))
