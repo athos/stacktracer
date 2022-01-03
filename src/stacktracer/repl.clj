@@ -1,6 +1,7 @@
 (ns stacktracer.repl
-  (:require [clojure.repl :as repl]
-            [stacktracer.core :as st]
+  (:require [stacktracer.core :as st]
+            [stacktracer.fallback :as fallback]
+            [stacktracer.protocols :as proto]
             [stacktracer.xforms :as sx]))
 
 (defn exclude-fns [& patterns]
@@ -25,9 +26,12 @@
         (skip-internal-calls)
         (skip-duplicate-sites)))
 
+(def default-fallback-fn fallback/default-fallback-fn)
+
 (def ^:private default-options
   (atom {:xform default-xform :lines 5 :limit 5
-         :color true :show-message true}))
+         :color true :show-message true
+         :fallback default-fallback-fn}))
 
 (defn set-default-options! [opts]
   (reset! default-options opts))
@@ -35,17 +39,12 @@
 (defn update-default-options! [f & args]
   (apply swap! default-options f args))
 
-(defn default-fallback-fn [e]
-  (binding [*out* *err*]
-    (println "[ERROR] Stacktracer failed to process the exception. Falls back to clojure.repl/pst."))
-  (repl/pst e))
-
-(defn- pst* [e {:keys [fallback-fn] :as opts}]
+(defn- pst* [e {:keys [fallback] :as opts}]
   (when e
     (try
       (st/render-error e opts)
-      (catch Throwable _
-        ((or fallback-fn default-fallback-fn) e)))))
+      (catch Throwable t
+        (proto/fallback fallback e t)))))
 
 (defn pst-for [e & {:as opts}]
   (pst* e (merge @default-options opts)))

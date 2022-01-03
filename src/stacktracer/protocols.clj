@@ -13,3 +13,6 @@
   (ex-message [this])
   (ex-trace [this])
   (ex-cause [this]))
+
+(defprotocol IFallback
+  (fallback [this original-error stacktracer-error]))
