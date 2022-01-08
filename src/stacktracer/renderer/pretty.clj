@@ -48,10 +48,19 @@
       (common/render-error-message printer e)
       (when (seq elems)
         (proto/newline printer)))
-    (let [len (count elems)]
-      (doseq [[i elem] (map-indexed vector elems)]
-        (render-trace-element this elem)
-        (when (< i (dec len))
+    (if (seq elems)
+      (let [len (count elems)]
+        (doseq [[i elem] (map-indexed vector elems)]
+          (render-trace-element this elem)
+          (when (< i (dec len))
+            (proto/newline printer))))
+      (when (:show-message opts)
+        (when-not (:reverse opts)
+          (proto/newline printer))
+        (doto printer
+          (proto/print "   << No stack trace available for this throwable >>")
+          (proto/newline))
+        (when (:reverse opts)
           (proto/newline printer))))
     (when (and (:show-message opts) (:reverse opts))
       (when (seq elems)
