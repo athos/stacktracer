@@ -38,9 +38,12 @@
         (common/printf "   %s| %s" (pad (+ line i 1)) text)
         (proto/newline)))))
 
-(defrecord PrettyRenderer [printer opts]
+(defrecord PrettyRenderer [printer first? opts]
   proto/IRenderer
   (render-trace [this e elems]
+    (if @first?
+      (swap! first? not)
+      (proto/newline printer))
     (when (and (:show-message opts) (not (:reverse opts)))
       (common/render-error-message printer e)
       (when (seq elems)
@@ -54,3 +57,6 @@
       (when (seq elems)
         (proto/newline printer))
       (common/render-error-message printer e))))
+
+(defn make-pretty-renderer [printer opts]
+  (->PrettyRenderer printer (atom true) opts))
