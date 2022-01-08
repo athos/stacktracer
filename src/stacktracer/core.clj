@@ -101,13 +101,14 @@
                         (if-let [limit (:limit opts)]
                           (take limit)
                           identity)))
-         (#(cond-> % (:reverse opts) rseq))
-         (partition-by :error))))
+         (group-by :error))))
 
 (defn render-error [e opts]
-  (let [renderer (renderer/make-renderer opts)]
-    (doseq [elems (->> (iterate proto/ex-cause e)
-                       (take-while some?)
-                       (collect-elements opts))
-            :let [elems' (map #(merge % (load-element-content % opts)) elems)]]
-      (proto/render-trace renderer e elems'))))
+  (let [renderer (renderer/make-renderer opts)
+        errs (take-while some? (iterate proto/ex-cause e))
+        errs->elems (collect-elements opts errs)]
+    (doseq [err (cond-> errs (:reverse opts) reverse)
+            :let [elems (->> (errs->elems err)
+                             (map #(merge % (load-element-content % opts)))
+                             (#(cond-> % (:reverse opts) reverse)))]]
+      (proto/render-trace renderer err elems))))

@@ -23,6 +23,7 @@
   (render-trace [this e elems]
     (when (and (:show-message opts) (not (:reverse opts)))
       (common/render-error-message printer e))
-    (render-trace-elements this elems)
+    (when (seq elems)
+      (render-trace-elements this elems))
     (when (and (:show-message opts) (:reverse opts))
       (common/render-error-message printer e))))
