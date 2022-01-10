@@ -33,7 +33,10 @@
 
 (defn render-error-message [printer e]
   (proto/with-color-type printer :error
-    #(doseq [line (str/split-lines (proto/ex-message e))]
-       (doto printer
-         (proto/print line)
-         (proto/newline)))))
+    (fn []
+      (when (proto/wrapped? e)
+        (proto/print printer "Caused by: "))
+      (doseq [line (str/split-lines (proto/ex-message e))]
+        (doto printer
+          (proto/print line)
+          (proto/newline))))))

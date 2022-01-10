@@ -15,7 +15,8 @@
       (if (= (:type top-elem) 'clojure.lang.Compiler$CompilerException)
         (errors/ex-data->compiler-exception-trace (:data top-elem))
         (:trace (:clojure.main/trace data)))))
-  (ex-cause [_]))
+  (ex-cause [_])
+  (wrapped? [_] false))
 
 (defn from-report-edn [r]
   (->ReportEdn (edn/read r)))
@@ -30,7 +31,8 @@
   (ex-message [_]
     (format "%s: %s" type message))
   (ex-trace [_] trace)
-  (ex-cause [_]))
+  (ex-cause [_])
+  (wrapped? [_] false))
 
 (defn- parse-java-stacktrace [lines]
   (reduce (fn [acc line]

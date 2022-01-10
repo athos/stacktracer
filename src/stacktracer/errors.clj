@@ -8,6 +8,17 @@
         filename (utils/file-basename source)]
     [[(symbol (str nsname \$ "<toplevel>")) '<none> filename line]]))
 
+(defrecord Wrapped [e]
+  proto/IStacktrace
+  (ex-message [_]
+    (proto/ex-message e))
+  (ex-trace [_]
+    (proto/ex-trace e))
+  (ex-cause [_]
+    (when-let [cause (proto/ex-cause e)]
+      (Wrapped. cause)))
+  (wrapped? [_] true))
+
 (extend-protocol proto/IStacktrace
   Object
   (ex-message [this]
@@ -17,12 +28,14 @@
     (when (and (map? this) (:trace this))
       (:trace this)))
   (ex-cause [_])
+  (wrapped? [_] false)
   Throwable
   (ex-message [this]
     (main/err->msg this))
   (ex-trace [this]
     (:trace (Throwable->map this)))
   (ex-cause [_])
+  (wrapped? [_] false)
   clojure.lang.Compiler$CompilerException
   (ex-message [this]
     (-> (Throwable->map this)
@@ -32,4 +45,5 @@
     (ex-data->compiler-exception-trace (ex-data this)))
   (ex-cause [this]
     (when (= (:clojure.error/phase (ex-data this)) :macroexpansion)
-      (ex-cause this))))
+      (some-> (ex-cause this) ->Wrapped)))
+  (wrapped? [_] false))

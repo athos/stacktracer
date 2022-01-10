@@ -12,7 +12,8 @@
 (defprotocol IStacktrace
   (ex-message [this])
   (ex-trace [this])
-  (ex-cause [this]))
+  (ex-cause [this])
+  (wrapped? [this]))
 
 (defprotocol IFallback
   (fallback [this original-error stacktracer-error]))
