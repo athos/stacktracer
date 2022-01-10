@@ -14,7 +14,8 @@
     (let [top-elem (first (:via (:clojure.main/trace data)))]
       (if (= (:type top-elem) 'clojure.lang.Compiler$CompilerException)
         (errors/ex-data->compiler-exception-trace (:data top-elem))
-        (:trace (:clojure.main/trace data))))))
+        (:trace (:clojure.main/trace data)))))
+  (ex-cause [_]))
 
 (defn from-report-edn [r]
   (->ReportEdn (edn/read r)))
@@ -28,7 +29,8 @@
   proto/IStacktrace
   (ex-message [_]
     (format "%s: %s" type message))
-  (ex-trace [_] trace))
+  (ex-trace [_] trace)
+  (ex-cause [_]))
 
 (defn- parse-java-stacktrace [lines]
   (reduce (fn [acc line]
