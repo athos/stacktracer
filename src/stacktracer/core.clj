@@ -2,23 +2,14 @@
   (:require [clojure.java.io :as io]
             [clojure.main :as main]
             [clojure.repl :as repl]
-            [clojure.string :as str]
             [stacktracer.protocols :as proto]
             [stacktracer.renderer :as renderer]
-            [stacktracer.xforms :as sx])
-  (:import [java.util.regex Pattern]))
-
-(def ^:private ^String file-separator
-  (System/getProperty "file.separator"))
-
-(def ^:private file-separator-re
-  (Pattern/compile (Pattern/quote file-separator)))
+            [stacktracer.utils :as utils]
+            [stacktracer.xforms :as sx]))
 
 (defn ex-data->compiler-exception-trace [{:clojure.error/keys [source line]}]
-  (let [nsname (-> source
-                   (str/replace #"\.(?:clj|cljc)$" "")
-                   (str/replace file-separator "."))
-        filename (-> source (str/split file-separator-re) last)]
+  (let [nsname (utils/path->ns-name source)
+        filename (utils/file-basename source)]
     [[(symbol (str nsname \$ "<toplevel>")) '<none> filename line]]))
 
 (extend-protocol proto/IStacktrace
@@ -87,9 +78,7 @@
                      [_ basename ext] (re-matches #"(.+)(\.cljc?)" file)]
                :when (and simple-name basename
                           (= (munge simple-name) basename))
-               :let [path (-> (munge nsname)
-                              (str/replace "." file-separator)
-                              (str ext))
+               :let [path (utils/ns-name->path nsname ext)
                      res (-> (clojure.lang.RT/baseLoader)
                              (.getResource path))]
                :when res]
