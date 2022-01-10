@@ -1,7 +1,7 @@
 (ns stacktracer.reformat
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [stacktracer.core :as s.core]
+            [stacktracer.errors :as errors]
             [stacktracer.protocols :as proto]
             [stacktracer.repl :as st])
   (:import [java.io PushbackReader]))
@@ -13,7 +13,7 @@
   (ex-trace [_]
     (let [top-elem (first (:via (:clojure.main/trace data)))]
       (if (= (:type top-elem) 'clojure.lang.Compiler$CompilerException)
-        (s.core/ex-data->compiler-exception-trace (:data top-elem))
+        (errors/ex-data->compiler-exception-trace (:data top-elem))
         (:trace (:clojure.main/trace data))))))
 
 (defn from-report-edn [r]
