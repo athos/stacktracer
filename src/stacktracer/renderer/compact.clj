@@ -18,17 +18,23 @@
         (proto/print (str/trim (:focused elem)))
         (proto/newline)))))
 
-(defrecord CompactRenderer [printer opts]
+(defrecord CompactRenderer [printer first? opts]
   proto/IRenderer
   (render-trace [this e elems]
     (when (:show-messages opts)
       (if (:reverse opts)
-        (proto/with-color-type printer :info
-          #(doto printer
-             (proto/print "Traceback (most recent call last):")
-             (proto/newline)))
+        (when @first?
+          (proto/with-color-type printer :info
+            #(doto printer
+               (proto/print "Traceback (most recent call last):")
+               (proto/newline))))
         (common/render-error-message printer e)))
     (when (seq elems)
       (render-trace-elements this elems))
     (when (and (:show-messages opts) (:reverse opts))
-      (common/render-error-message printer e))))
+      (common/render-error-message printer e))
+    (reset! first? false)
+    nil))
+
+(defn make-compact-renderer [printer opts]
+  (->CompactRenderer printer (atom true) opts))

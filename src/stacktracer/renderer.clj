@@ -11,7 +11,7 @@
     (make-renderer (assoc opts :format :pretty))))
 
 (defmethod make-renderer :pretty [opts]
-  (pretty/->PrettyRenderer (printer/make-printer opts) opts))
+  (pretty/make-pretty-renderer (printer/make-printer opts) opts))
 
 (defmethod make-renderer :compact [opts]
-  (compact/->CompactRenderer (printer/make-printer opts) opts))
+  (compact/make-compact-renderer (printer/make-printer opts) opts))
