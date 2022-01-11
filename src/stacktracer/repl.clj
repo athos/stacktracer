@@ -29,7 +29,7 @@
 (def default-fallback-fn fallback/default-fallback-fn)
 
 (def ^:private default-options
-  (atom {:xform default-xform :lines 5 :limit 5
+  (atom {:xform default-xform :lines 3 :limit 3
          :color true :show-message true
          :fallback default-fallback-fn}))
 
