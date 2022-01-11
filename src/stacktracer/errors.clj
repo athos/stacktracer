@@ -36,14 +36,15 @@
     (:trace (Throwable->map this)))
   (ex-cause [_])
   (wrapped? [_] false)
-  clojure.lang.Compiler$CompilerException
-  (ex-message [this]
-    (-> (Throwable->map this)
-        main/ex-triage
-        main/ex-str))
-  (ex-trace [this]
-    (ex-data->compiler-exception-trace (ex-data this)))
-  (ex-cause [this]
-    (when (= (:clojure.error/phase (ex-data this)) :macroexpansion)
-      (some-> (ex-cause this) ->Wrapped)))
-  (wrapped? [_] false))
+  ;; clojure.lang.Compiler$CompilerException
+  ;; (ex-message [this]
+  ;;   (-> (Throwable->map this)
+  ;;       main/ex-triage
+  ;;       main/ex-str))
+  ;; (ex-trace [this]
+  ;;   (ex-data->compiler-exception-trace (ex-data this)))
+  ;; (ex-cause [this]
+  ;;   (when (= (:clojure.error/phase (ex-data this)) :macroexpansion)
+  ;;     (some-> (ex-cause this) ->Wrapped)))
+  ;; (wrapped? [_] false)
+  )
