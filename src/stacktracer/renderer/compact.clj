@@ -21,8 +21,13 @@
 (defrecord CompactRenderer [printer opts]
   proto/IRenderer
   (render-trace [this e elems]
-    (when (and (:show-message opts) (not (:reverse opts)))
-      (common/render-error-message printer e))
+    (when (:show-message opts)
+      (if (:reverse opts)
+        (proto/with-color-type printer :info
+          #(doto printer
+             (proto/print "Traceback (most recent call last):")
+             (proto/newline)))
+        (common/render-error-message printer e)))
     (when (seq elems)
       (render-trace-elements this elems))
     (when (and (:show-message opts) (:reverse opts))

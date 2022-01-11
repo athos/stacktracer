@@ -41,10 +41,16 @@
 (defrecord PrettyRenderer [printer opts]
   proto/IRenderer
   (render-trace [this e elems]
-    (when (and (:show-message opts) (not (:reverse opts)))
-      (common/render-error-message printer e)
-      (when (seq elems)
-        (proto/newline printer)))
+    (when (:show-message opts)
+      (if (:reverse opts)
+        (proto/with-color-type printer :info
+          #(doto printer
+             (proto/print "Traceback (most recent call last):")
+             (proto/newline)
+             (proto/newline)))
+        (do (common/render-error-message printer e)
+            (when (seq elems)
+              (proto/newline printer)))))
     (if (seq elems)
       (doseq [elem elems]
         (render-trace-element this elem)
