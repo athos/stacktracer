@@ -9,7 +9,7 @@
         file-max-len (apply max (map (comp count :file) elems))]
     (doseq [elem elems]
       (proto/with-color-type printer :info
-        #(common/printf printer "[%s/%d] %s:%s| "
+        #(common/printf printer "  [%s/%d] %s:%s| "
                         (common/pad idigits (:id elem))
                         (:total elem)
                         (common/pad file-max-len (:file elem))
