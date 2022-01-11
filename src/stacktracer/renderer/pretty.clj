@@ -41,7 +41,7 @@
 (defrecord PrettyRenderer [printer opts]
   proto/IRenderer
   (render-trace [this e elems]
-    (when (:show-message opts)
+    (when (:show-messages opts)
       (if (:reverse opts)
         (proto/with-color-type printer :info
           #(doto printer
@@ -55,12 +55,12 @@
       (doseq [elem elems]
         (render-trace-element this elem)
         (proto/newline printer))
-      (when (:show-message opts)
+      (when (:show-messages opts)
         (when-not (:reverse opts)
           (proto/newline printer))
         (doto printer
           (proto/print "   << No stack trace available for this throwable >>")
           (proto/newline)
           (proto/newline))))
-    (when (and (:show-message opts) (:reverse opts))
+    (when (and (:show-messages opts) (:reverse opts))
       (common/render-error-message printer e))))

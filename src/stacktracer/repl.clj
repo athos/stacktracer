@@ -30,7 +30,7 @@
 
 (def ^:private default-options
   (atom {:xform default-xform :lines 3 :limit 3
-         :color true :show-message true
+         :color true :show-messages true
          :fallback default-fallback-fn}))
 
 (defn set-default-options! [opts]
