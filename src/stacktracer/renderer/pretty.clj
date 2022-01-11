@@ -38,34 +38,23 @@
         (common/printf "   %s| %s" (pad (+ line i 1)) text)
         (proto/newline)))))
 
-(defrecord PrettyRenderer [printer first? opts]
+(defrecord PrettyRenderer [printer opts]
   proto/IRenderer
   (render-trace [this e elems]
-    (if @first?
-      (swap! first? not)
-      (proto/newline printer))
     (when (and (:show-message opts) (not (:reverse opts)))
       (common/render-error-message printer e)
       (when (seq elems)
         (proto/newline printer)))
     (if (seq elems)
-      (let [len (count elems)]
-        (doseq [[i elem] (map-indexed vector elems)]
-          (render-trace-element this elem)
-          (when (< i (dec len))
-            (proto/newline printer))))
+      (doseq [elem elems]
+        (render-trace-element this elem)
+        (proto/newline printer))
       (when (:show-message opts)
         (when-not (:reverse opts)
           (proto/newline printer))
         (doto printer
           (proto/print "   << No stack trace available for this throwable >>")
-          (proto/newline))
-        (when (:reverse opts)
-          (proto/newline printer))))
+          (proto/newline)
+          (proto/newline))))
     (when (and (:show-message opts) (:reverse opts))
-      (when (seq elems)
-        (proto/newline printer))
       (common/render-error-message printer e))))
-
-(defn make-pretty-renderer [printer opts]
-  (->PrettyRenderer printer (atom true) opts))
