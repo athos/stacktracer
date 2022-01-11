@@ -11,20 +11,20 @@
          (apply comp))
     identity))
 
-(defn skip-internal-calls []
+(def skip-internal-calls
   (sx/dedupe-by (juxt :class
                       (fn [{m :method}]
                         (get '{invoke invokeStatic
                                doInvoke invokeStatic}
                              m m)))))
 
-(defn skip-duplicate-sites []
+(def skip-duplicate-sites
   (sx/dedupe-by (juxt :file :line)))
 
 (def default-xform
   (comp (exclude-fns #"clojure\..*" #"nrepl\..*")
-        (skip-internal-calls)
-        (skip-duplicate-sites)))
+        skip-internal-calls
+        skip-duplicate-sites))
 
 (def default-fallback-fn fallback/default-fallback-fn)
 
