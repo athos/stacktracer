@@ -65,8 +65,10 @@
   (let [renderer (renderer/make-renderer opts)
         errs (take-while some? (iterate proto/ex-cause e))
         err->elems (collect-elements opts errs)]
+    (proto/start-rendering renderer)
     (doseq [err (cond-> errs (:reverse opts) reverse)
             :let [elems (->> (err->elems err)
                              (map #(merge % (load-element-content % opts)))
                              (#(cond-> % (:reverse opts) reverse)))]]
-      (proto/render-trace renderer err elems))))
+      (proto/render-trace renderer err elems))
+    (proto/end-rendering renderer)))

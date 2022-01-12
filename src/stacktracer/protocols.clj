@@ -7,7 +7,9 @@
   (with-color-type [this color-type f]))
 
 (defprotocol IRenderer
-  (render-trace [this e elems]))
+  (start-rendering [this])
+  (render-trace [this e elems])
+  (end-rendering [this]))
 
 (defprotocol IStacktrace
   (ex-message [this])

@@ -38,36 +38,31 @@
         (common/printf "   %s| %s" (pad (+ line i 1)) text)
         (proto/newline)))))
 
-(defrecord PrettyRenderer [printer first? opts]
+(defrecord PrettyRenderer [printer opts]
   proto/IRenderer
+  (start-rendering [_]
+    (when (and (:show-messages opts) (:reverse opts))
+      (proto/with-color-type printer :info
+        #(doto printer
+           (proto/print "Traceback (most recent call last):")
+           (proto/newline)))))
   (render-trace [this e elems]
     (when (:show-messages opts)
-      (if (:reverse opts)
-        (if @first?
-          (proto/with-color-type printer :info
-            #(doto printer
-               (proto/print "Traceback (most recent call last):")
-               (proto/newline)
-               (proto/newline)))
-          (proto/newline printer))
-        (do (common/render-error-message printer e)
-            (when (seq elems)
-              (proto/newline printer)))))
+      (when-not (:reverse opts)
+        (common/render-error-message printer e))
+      (proto/newline printer))
     (if (seq elems)
       (doseq [elem elems]
         (render-trace-element this elem)
         (proto/newline printer))
       (when (:show-messages opts)
-        (when-not (:reverse opts)
-          (proto/newline printer))
         (doto printer
           (proto/print "   << No stack trace available for this throwable >>")
           (proto/newline)
           (proto/newline))))
     (when (and (:show-messages opts) (:reverse opts))
-      (common/render-error-message printer e))
-    (reset! first? false)
-    nil))
+      (common/render-error-message printer e)))
+  (end-rendering [_]))
 
 (defn make-pretty-renderer [printer opts]
-  (->PrettyRenderer printer (atom true) opts))
+  (->PrettyRenderer printer opts))
