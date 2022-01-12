@@ -12,6 +12,8 @@
   proto/IStacktrace
   (ex-message [_]
     (proto/ex-message e))
+  (ex-data [_]
+    (proto/ex-data e))
   (ex-trace [_]
     (proto/ex-trace e))
   (ex-cause [_]
@@ -24,6 +26,9 @@
   (ex-message [this]
     (when (and (map? this) (:trace this))
       (main/ex-str (main/ex-triage this))))
+  (ex-data [this]
+    (when (and (map? this) (:data this))
+      (:data this)))
   (ex-trace [this]
     (when (and (map? this) (:trace this))
       (:trace this)))
@@ -32,6 +37,8 @@
   Throwable
   (ex-message [this]
     (main/err->msg this))
+  (ex-data [this]
+    (:data (Throwable->map this)))
   (ex-trace [this]
     (:trace (Throwable->map this)))
   (ex-cause [_])
