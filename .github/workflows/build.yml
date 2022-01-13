@@ -13,7 +13,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
     - name: Setup Clojure CLI
-      uses: DeLaGuardo/setup-clojure@3.5
+      uses: DeLaGuardo/setup-clojure@3.7
       with:
         cli: latest
     - name: Cache deps
@@ -26,9 +26,6 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('deps.edn') }}
         restore-keys: |
           ${{ runner.os }}-
-    - name: Install deps
-      run: |
-        clojure -A:check -P
     - name: Run check
       run: clojure -M:check
     - name: Run tests
