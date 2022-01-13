@@ -31,7 +31,8 @@ jobs:
         clojure -A:check -P
     - name: Run check
       run: clojure -M:check
-    # - name: Run tests for CLJ 1.10
+    - name: Run tests
+      run: clojure -T:build test
     # - name: Measure test coverage
     #   run: clojure -A:test:coverage
     # - name: Upload coverage report to CodeCov
