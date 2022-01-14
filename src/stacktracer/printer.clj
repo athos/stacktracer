@@ -19,7 +19,7 @@
 
 (def ^:private ^:dynamic *current-color-type* nil)
 
-(defrecord AsciiColorConsolePrinter [colors]
+(defrecord ANSIColorConsolePrinter [colors]
   proto/IPrinter
   (print [_ text]
     (print text))
@@ -66,7 +66,7 @@
   (binding [*out* (or (:output-to opts) *err*)]
     (cond-> (if (:color opts)
               (let [colors (merge default-colors (:colors opts))]
-                (->AsciiColorConsolePrinter colors))
+                (->ANSIColorConsolePrinter colors))
               (->MonochromeConsolePrinter))
       (:buffered opts)
       make-buffered-printer)))
