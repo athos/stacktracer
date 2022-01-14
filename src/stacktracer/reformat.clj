@@ -10,6 +10,8 @@
   proto/IStacktrace
   (ex-message [_]
     (:clojure.main/message data))
+  (ex-data [_]
+    (:data data))
   (ex-trace [_]
     (let [top-elem (first (:via (:clojure.main/trace data)))]
       (if (= (:type top-elem) 'clojure.lang.Compiler$CompilerException)
@@ -30,6 +32,7 @@
   proto/IStacktrace
   (ex-message [_]
     (format "%s: %s" type message))
+  (ex-data [_])
   (ex-trace [_] trace)
   (ex-cause [_])
   (wrapped? [_] false))
