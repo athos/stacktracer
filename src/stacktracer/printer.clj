@@ -15,7 +15,7 @@
 
 (def default-colors
   {:info "\u001b[36m"
-   :error "\u001b[31;1m"})
+   :error "\u001b[31m"})
 
 (def ^:private ^:dynamic *current-color-type* nil)
 
