@@ -62,7 +62,8 @@
           (proto/newline))))
     (when (and (:show-messages opts) (:reverse opts))
       (common/render-error-message printer e)))
-  (end-rendering [_]))
+  (end-rendering [_]
+    (proto/flush printer)))
 
 (defn make-pretty-renderer [printer opts]
   (->PrettyRenderer printer opts))

@@ -8,7 +8,9 @@
   (newline [_]
     (newline))
   (with-color-type [_ _ f]
-    (f)))
+    (f))
+  (flush [_]
+    (flush)))
 
 (def default-colors
   {:info "\u001b[36m"
@@ -26,7 +28,9 @@
     (binding [*current-color-type* color-type]
       (print (get colors color-type))
       (f))
-    (print (or (some-> color-type (get colors)) "\u001b[0m"))))
+    (print (or (some-> color-type (get colors)) "\u001b[0m")))
+  (flush [_]
+    (flush)))
 
 (defmulti make-printer (fn [opts] (:printer opts)))
 

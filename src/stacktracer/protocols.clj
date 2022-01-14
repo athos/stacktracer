@@ -1,10 +1,11 @@
 (ns stacktracer.protocols
-  (:refer-clojure :exclude [ex-cause ex-data ex-message newline print]))
+  (:refer-clojure :exclude [ex-cause ex-data ex-message flush newline print]))
 
 (defprotocol IPrinter
   (print [this text])
   (newline [this])
-  (with-color-type [this color-type f]))
+  (with-color-type [this color-type f])
+  (flush [this]))
 
 (defprotocol IRenderer
   (start-rendering [this])

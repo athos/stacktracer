@@ -33,7 +33,8 @@
       (render-trace-elements this elems))
     (when (and (:show-messages opts) (:reverse opts))
       (common/render-error-message printer e)))
-  (end-rendering [_]))
+  (end-rendering [_]
+    (proto/flush printer)))
 
 (defn make-compact-renderer [printer opts]
   (->CompactRenderer printer opts))
