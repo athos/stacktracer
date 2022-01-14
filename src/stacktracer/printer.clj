@@ -1,5 +1,6 @@
 (ns stacktracer.printer
-  (:require [stacktracer.protocols :as proto]))
+  (:require [stacktracer.protocols :as proto])
+  (:import [java.io PrintWriter StringWriter]))
 
 (defrecord MonochromeConsolePrinter []
   proto/IPrinter
@@ -32,6 +33,28 @@
   (flush [_]
     (flush)))
 
+(defrecord BufferedPrinter [printer ^PrintWriter pw ^StringWriter sw]
+  proto/IPrinter
+  (print [_ text]
+    (binding [*out* pw]
+      (proto/print printer text)))
+  (newline [_]
+    (binding [*out* pw]
+      (proto/newline printer)))
+  (with-color-type [_ color-type f]
+    (binding [*out* pw]
+      (proto/with-color-type printer color-type f)))
+  (flush [_]
+    (binding [*out* pw]
+      (proto/flush printer))
+    (print (.toString sw))
+    (flush)))
+
+(defn make-buffered-printer [printer]
+  (let [sw (StringWriter.)
+        pw (PrintWriter. sw)]
+    (->BufferedPrinter printer pw sw)))
+
 (defmulti make-printer (fn [opts] (:printer opts)))
 
 (defmethod make-printer :default [opts]
@@ -41,7 +64,9 @@
 
 (defmethod make-printer :console [opts]
   (binding [*out* (or (:output-to opts) *err*)]
-    (if (:color opts)
-      (let [colors (merge default-colors (:colors opts))]
-        (->AsciiColorConsolePrinter colors))
-      (->MonochromeConsolePrinter))))
+    (cond-> (if (:color opts)
+              (let [colors (merge default-colors (:colors opts))]
+                (->AsciiColorConsolePrinter colors))
+              (->MonochromeConsolePrinter))
+      (:buffered opts)
+      make-buffered-printer)))
