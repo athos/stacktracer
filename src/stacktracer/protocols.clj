@@ -12,6 +12,9 @@
   (render-trace [this e elems])
   (end-rendering [this]))
 
+(defprotocol ILoader
+  (load-content [this path line]))
+
 (defprotocol IStacktrace
   (ex-message [this])
   (ex-data [this])

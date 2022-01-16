@@ -1,29 +1,11 @@
 (ns stacktracer.core
-  (:require [clojure.java.io :as io]
-            [clojure.repl :as repl]
+  (:require [clojure.repl :as repl]
             stacktracer.errors
+            [stacktracer.loader :as loader]
             [stacktracer.protocols :as proto]
             [stacktracer.renderer :as renderer]
             [stacktracer.utils :as utils]
             [stacktracer.xforms :as sx]))
-
-(defn- load-element-content [{:keys [resource line]} {nlines :lines}]
-  (with-open [r (io/reader resource)]
-    (let [line' (dec line)]
-      (->> (line-seq r)
-           (map-indexed vector)
-           (reduce (fn [ret [i text]]
-                     (cond (<= (- line' nlines) i (dec line'))
-                           (update ret :before (fnil conj []) text)
-
-                           (= i line')
-                           (assoc ret :focused text)
-
-                           (<= (inc line') i (+ line' nlines))
-                           (update ret :after (fnil conj []) text)
-
-                           :else ret))
-                   {:focused ""})))))
 
 (defn- build-xform [state {:keys [xform start end include exclude]}]
   (cond-> (or xform identity)
@@ -35,7 +17,7 @@
                   (comp x (sx/drop-last (- end)))))
     start (comp (drop (dec start)))))
 
-(defn- collect-elements [opts es]
+(defn- prepare-trace-elements [loader es opts]
   (let [state (atom 0)]
     (->> (for [e es
                [class method file line] (proto/ex-trace e)
@@ -48,12 +30,11 @@
                :when (and simple-name basename
                           (= (munge simple-name) basename))
                :let [path (utils/ns-name->path nsname ext)
-                     res (-> (clojure.lang.RT/baseLoader)
-                             (.getResource path))]
-               :when res]
-           {:error e :class class :method method
-            :fn (repl/demunge (str nsname \$ fname))
-            :resource res :file path :line line})
+                     content (proto/load-content loader path line)]
+               :when content]
+           (-> {:error e :class class :method method :file path :line line
+                :fn (repl/demunge (str nsname \$ fname))}
+               (merge content)))
          (into [] (build-xform state opts))
          (into [] (comp (map #(assoc % :total @state))
                         (if-let [limit (:limit opts)]
@@ -62,13 +43,14 @@
          (group-by :error))))
 
 (defn render-error [e opts]
-  (let [renderer (renderer/make-renderer opts)
+  (let [loader (loader/make-loader opts)
+        renderer (renderer/make-renderer opts)
         errs (take-while some? (iterate proto/ex-cause e))
-        err->elems (collect-elements opts errs)]
+        err->elems (prepare-trace-elements loader errs opts)]
     (proto/start-rendering renderer)
-    (doseq [err (cond-> errs (:reverse opts) reverse)
-            :let [elems (->> (err->elems err)
-                             (map #(merge % (load-element-content % opts)))
-                             (#(cond-> % (:reverse opts) reverse)))]]
-      (proto/render-trace renderer err elems))
+    (doseq [err (cond-> errs (:reverse opts) reverse)]
+      (->> (cond-> (err->elems err)
+             (:reverse opts)
+             reverse)
+           (proto/render-trace renderer err)))
     (proto/end-rendering renderer)))
