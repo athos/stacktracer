@@ -9,8 +9,12 @@
     (.append sb ^String text))
   (newline [_]
     (.append sb \newline))
-  (with-color-type [_ _ f]
-    (f))
+  (with-color-type [_ type f]
+    (when (= type :error)
+      (.append sb "<<"))
+    (f)
+    (when (= type :error)
+      (.append sb ">>")))
   (flush [_]))
 
 (defn- make-mock-printer []
@@ -44,8 +48,8 @@
                    "error!!"))
             (wrapped? [_] false))]
     (common/render-error-message printer e)
-    (is (= (str "Execution error (ExceptionInfo) at foo.bar/fn (bar.clj:42)\n"
-                "error!!\n")
+    (is (= (str "<<Execution error (ExceptionInfo) at foo.bar/fn (bar.clj:42)\n"
+                "error!!\n>>")
            (str (:sb printer)))))
   (let [printer (make-mock-printer)
         e (reify proto/IStacktrace
@@ -54,6 +58,6 @@
                    "error!!"))
             (wrapped? [_] true))]
     (common/render-error-message printer e)
-    (is (= (str "Caused by: Execution error (ExceptionInfo) at foo.bar/fn (bar.clj:42)\n"
-                "error!!\n")
+    (is (= (str "<<Caused by: Execution error (ExceptionInfo) at foo.bar/fn (bar.clj:42)\n"
+                "error!!\n>>")
            (str (:sb printer))))))
